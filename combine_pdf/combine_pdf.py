@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import openpyxl
+import openpyxl # Need to read xlsx
 from pypdf import PdfWriter
 
 def extract_file_names(df):
