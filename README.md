@@ -93,8 +93,9 @@ git clone https://github.com/matutosi/easypdf.git
 Opstional but RECOMMENDED to reduce execute file.
 
 ```
-python -m venv easypdf
-.\easypdf\Scripts\Activate
+python -m venv combine_pdf
+.\combine_pdf\Scripts\Activate
+cd combine_pdf
 ```
 
 
