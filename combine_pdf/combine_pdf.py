@@ -16,7 +16,6 @@ def extract_file_names(df):
         Returns an empty list if the input DataFrame is empty or doesn't contain
         the necessary columns.
     """
-    nr, nc = df.shape
     output = df.loc[:,"outputs"].unique()
     result = []
     for out in output:
@@ -25,7 +24,7 @@ def extract_file_names(df):
         result.append(out)
     return(result)
 
-def pdf_combine(input_pdfs, output_pdf):
+def combine_pdf(input_pdfs, output_pdf):
     """Combines multiple PDF files into a single PDF.
     Args:
         input_pdfs: A list of paths to the input PDF files.
@@ -75,4 +74,4 @@ for f in files:
     print("combining")
     print(f[1])
     print("    generating: " + f[0])
-    pdf_combine(f[1], f[0])
+    combine_pdf(f[1], f[0])
