@@ -44,7 +44,7 @@ combine_pdf.xlsx が次のように入力されており，[01.pdf, 02.pdf, 03.p
 | 10.pdf | bb.pdf  |
 | 09.pdf | bb.pdf  |
 
-<img src="after.png" width="50%"/>
+<img src="after.png" width="70%"/>
 
 This is how to use conbime_pdf.py. How to use other tools are almost similar.
 
@@ -68,4 +68,4 @@ If combine_pdf.xlsx is entered as follows and there are four PDF files [01.pdf, 
 | 10.pdf | bb.pdf  |
 | 09.pdf | bb.pdf  |
 
-<img src="after.png" width="50%"/>
+<img src="after.png" width="70%"/>
