@@ -25,7 +25,7 @@ def highlight_pdf(pdf_path, keywords, colors, opacity = 0.3):
     out_pdfs = pdf_path.replace(".pdf", "_highlighted.pdf")
     doc = fitz.open(pdf_path)
     for i in range(0, len(keywords)):
-        highlight_text(doc, str(keywords[i]), conver_color_name(colors[i]), opacity = 0.3)
+        highlight_text(doc, str(keywords[i]), conver_color_name(colors[i]), opacity = opacity)
     doc.save(out_pdfs)
     return out_pdfs
 
@@ -63,6 +63,7 @@ def conver_color_name(color):
         (1, 1, 0)  # default to yellow
     """
     COLORS = {
+        "white" : (1, 1, 1),
         "purple": (1, 0, 1),
         "yellow": (1, 1, 0),
         "red"   : (1, 0, 0),
