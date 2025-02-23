@@ -4,11 +4,11 @@ import pandas as pd
 import openpyxl # Need to read xlsx
 import fitz     # PyMuPDF
 
-def highlight_pdf(pdf_path, keywords, colors, opacity = 0.3):
+def highlight_pdf(path_pdf, keywords, colors, opacity = 0.3):
     """
     Highlights specified keywords in a PDF file.
     Args:
-        pdf_path (str): The path to the PDF file.
+        path_pdf (str): The path to the PDF file.
         keywords (list): A list of keywords to highlight.
         colors (list): A list of colors corresponding to each keyword.
         opacity (float, optional): The opacity of the highlight (0.0-1.0). Defaults to 0.3.
@@ -22,10 +22,10 @@ def highlight_pdf(pdf_path, keywords, colors, opacity = 0.3):
         >>> highlight_pdf("input.pdf", ["keyword1", "keyword2"], ["red", "blue"])
         "input_highlighted.pdf"
     """
-    out_pdfs = pdf_path.replace(".pdf", "_highlighted.pdf")
-    doc = fitz.open(pdf_path)
-    for i in range(0, len(keywords)):
-        highlight_text(doc, str(keywords[i]), conver_color_name(colors[i]), opacity = opacity)
+    out_pdfs = path_pdf.replace(".pdf", "_highlighted.pdf")
+    doc = fitz.open(path_pdf)
+    for kwd, clr in zip(keywords, colors):
+        highlight_text(doc, str(kwd), convert_color_name(clr), opacity = opacity)
     doc.save(out_pdfs)
     return out_pdfs
 
@@ -49,7 +49,7 @@ def highlight_text(doc, keyword, color, opacity = 0.3):
             annot.update(opacity = opacity)
     return doc
 
-def conver_color_name(color):
+def convert_color_name(color):
     """
     Converts a color name to its RGB value.
     Args:
@@ -57,9 +57,9 @@ def conver_color_name(color):
     Returns:
         tuple: The RGB value (e.g., (1, 0, 0) for red).
     Example:
-        >>> conver_color_name("red")
+        >>> convert_color_name("red")
         (1, 0, 0)
-        >>> conver_color_name("unknown")
+        >>> convert_color_name("unknown")
         (1, 1, 0)  # default to yellow
     """
     COLORS = {
@@ -102,9 +102,9 @@ def read_excel(path):
 
 # main
 
-in_pdfs = glob.glob("*.pdf")
+input_pdfs = glob.glob("*.pdf")
 df = read_excel("highlight_pdf.xlsx")
 keywords = df.keywords
 colors = df.colors
-for pdf in in_pdfs:
+for pdf in input_pdfs:
     highlight_pdf(pdf, keywords, colors)
