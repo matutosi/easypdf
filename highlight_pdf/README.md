@@ -39,6 +39,9 @@ copy highlight_pdf.exe and highlight_pdf.xlsx to the same directory.
 3.  hightligt_pdf.exe をクリックして実行．\
     <img src="after.png" width="10%"/>
 
+** 画面上では繋がって見える文字列でも，PDFの中ではスペースが入っていたり，離れている場合は強調表示がうまくいきません．文字列を変えて試してください． **
+
+
 ## How to use
 
 1.  Save pdf file(s) to be hightligted in the same directory with hightligt_pdf.exe.\
@@ -59,3 +62,6 @@ copy highlight_pdf.exe and highlight_pdf.xlsx to the same directory.
 
 3.  Click on hightligt_pdf.exe to run.\
     <img src="after.png" width="10%"/>
+
+** Highlighting does not work when strings are splited by space or others, even if it appears to be connected on screen. Try using a different strings. **
+
