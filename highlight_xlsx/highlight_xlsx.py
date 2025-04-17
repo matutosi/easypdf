@@ -78,17 +78,11 @@ def highlight_cell(sheet, range_str, keyword, color):
     rule = FormulaRule(formula=[condition], fill=color_fill)
     sheet.conditional_formatting.add(range_str, rule)
 
-
-
-#ワークブックを上書き保存
-
-
-
-# main
-input_xlsxs = glob.glob("*.xlsx")
-df = read_excel("highlight_xlsx.xlsx")
-keywords = df.keywords
-colors = df.colors
-for xlsx in input_xlsxs:
-    highlight_xlsx(xlsx, keywords, colors)
-
+if __name__ == "__main__":
+    input_xlsxs = glob.glob("*.xlsx")
+    df = read_excel("highlight_xlsx.xlsx")
+    keywords = df.keywords
+    colors = df.colors
+    for xlsx in input_xlsxs:
+        out_xlsx = highlight_xlsx(xlsx, keywords, colors)
+        os.startfile(out_xlsx)
