@@ -3,6 +3,7 @@ import glob
 import pandas as pd
 import openpyxl # Need to read xlsx
 import fitz     # PyMuPDF
+from PIL import ImageColor
 
 def highlight_pdf(path_pdf, keywords, colors, opacity = 0.3):
     """
@@ -22,8 +23,12 @@ def highlight_pdf(path_pdf, keywords, colors, opacity = 0.3):
         >>> highlight_pdf("input.pdf", ["keyword1", "keyword2"], ["red", "blue"])
         "input_highlighted.pdf"
     """
-    out_pdfs = path_pdf.replace(".pdf", "_highlighted.pdf")
-    doc = fitz.open(path_pdf)
+    if isinstance(path_pdf, str):
+        out_pdfs = path_pdf.replace(".pdf", "_highlighted.pdf")
+        doc = fitz.open(path_pdf)
+    else: # streamlit
+        out_pdfs = path_pdf.name.replace(".pdf", "_highlighted.pdf")
+        doc = fitz.open(stream = path_pdf.read(), filetype = "pdf")
     for kwd, clr in zip(keywords, colors):
         highlight_text(doc, str(kwd), convert_color_name(clr), opacity = opacity)
     doc.save(out_pdfs)
@@ -40,6 +45,7 @@ def highlight_text(doc, keyword, color, opacity = 0.3):
     Returns:
         fitz.Document: The updated PyMuPDF document object.
     """
+    print(f'{color=}')
     for page in doc:
         text_instances = page.search_for(keyword)
         for inst in text_instances:
@@ -72,11 +78,13 @@ def convert_color_name(color):
         "green" : (0, 1, 0),
         "gray"  : (0, 0, 0)
     }
+    if color[0] == "#":
+        rgb_color = ImageColor.getcolor(color, "RGB")
+        return tuple(c / 255.0 for c in rgb_color)
     try:
-        col = COLORS[color]
+        return COLORS[color]
     except:
-        col = (1, 1, 0)
-    return col
+        return (1, 1, 0)
 
 def read_excel(path):
     """
@@ -100,11 +108,11 @@ def read_excel(path):
         print(f"Error: {e}")
         input("Press Any Key")
 
-# main
+if __name__ == "__main__":
 
-input_pdfs = glob.glob("*.pdf")
-df = read_excel("highlight_pdf.xlsx")
-keywords = df.keywords
-colors = df.colors
-for pdf in input_pdfs:
-    highlight_pdf(pdf, keywords, colors)
+    input_pdfs = glob.glob("*.pdf")
+    df = read_excel("highlight_pdf.xlsx")
+    keywords = df.keywords
+    colors = df.colors
+    for pdf in input_pdfs:
+        highlight_pdf(pdf, keywords, colors)
