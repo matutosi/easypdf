@@ -1,12 +1,3 @@
-# 補足: `utils`パッケージ
-# Pythonの`utils`モジュールに含まれる関数は、Rに移植する際に`utils.`という接頭辞をつけて呼び出すことを想定しています。
-# 例: `utils.snap_objects`, `utils.objects_to_rect`
-# これらの関数は、Rのデータ構造（リストやデータフレーム）を扱うように再実装する必要があります。
-
-# 以下のimportは実装済みと仮定
-# library(utils)
-# library(_typing) # T_bbox, T_num, T_objなど、型定義をRのデータ構造に置き換える
-
 # Pythonのitertoolsの代替
 # Rのdplyrやpurrr、base::lapplyなどを使用
 
@@ -28,8 +19,8 @@ snap_edges <- function(edges, x_tolerance = DEFAULT_SNAP_TOLERANCE, y_tolerance 
     }
   }
 
-  snapped_v <- utils.snap_objects(by_orientation$v, "x0", x_tolerance)
-  snapped_h <- utils.snap_objects(by_orientation$h, "top", y_tolerance)
+  snapped_v <- snap_objects(by_orientation$v, "x0", x_tolerance)
+  snapped_h <- snap_objects(by_orientation$h, "top", y_tolerance)
   return(c(snapped_v, snapped_h))
 }
 
@@ -57,7 +48,7 @@ join_edge_group <- function(edges, orientation, tolerance = DEFAULT_JOIN_TOLERAN
     last <- joined[[length(joined)]]
     if (e[[min_prop]] <= (last[[max_prop]] + tolerance)) {
       if (e[[max_prop]] > last[[max_prop]]) {
-        joined[[length(joined)]] <- utils.resize_object(last, max_prop, e[[max_prop]])
+        joined[[length(joined)]] <- resize_object(last, max_prop, e[[max_prop]])
       }
     } else {
       joined <- append(joined, list(e))
@@ -97,14 +88,14 @@ merge_edges <- function(edges, snap_x_tolerance, snap_y_tolerance, join_x_tolera
 
 # words_to_edges: テキストから仮想的なテーブルの境界線を生成
 words_to_edges_h <- function(words, word_threshold = DEFAULT_MIN_WORDS_HORIZONTAL) {
-  by_top <- utils.cluster_objects(words, function(x) x$top, 1)
+  by_top <- cluster_objects(words, function(x) x$top, 1)
   large_clusters <- Filter(function(x) length(x) >= word_threshold, by_top)
 
   if (length(large_clusters) == 0) {
     return(list())
   }
   
-  rects <- lapply(large_clusters, utils.objects_to_rect)
+  rects <- lapply(large_clusters, objects_to_rect)
   min_x0 <- min(sapply(rects, `[[`, "x0"))
   max_x1 <- max(sapply(rects, `[[`, "x1"))
 
@@ -128,19 +119,19 @@ words_to_edges_h <- function(words, word_threshold = DEFAULT_MIN_WORDS_HORIZONTA
 words_to_edges_v <- function(words, word_threshold = DEFAULT_MIN_WORDS_VERTICAL) {
   get_center <- function(word) (word$x0 + word$x1) / 2
   
-  by_x0 <- utils.cluster_objects(words, function(x) x$x0, 1)
-  by_x1 <- utils.cluster_objects(words, function(x) x$x1, 1)
-  by_center <- utils.cluster_objects(words, get_center, 1)
+  by_x0 <- cluster_objects(words, function(x) x$x0, 1)
+  by_x1 <- cluster_objects(words, function(x) x$x1, 1)
+  by_center <- cluster_objects(words, get_center, 1)
   clusters <- c(by_x0, by_x1, by_center)
   
   sorted_clusters <- clusters[order(-sapply(clusters, length))]
   large_clusters <- Filter(function(x) length(x) >= word_threshold, sorted_clusters)
   
-  bboxes <- lapply(large_clusters, utils.objects_to_bbox)
+  bboxes <- lapply(large_clusters, objects_to_bbox)
   
   condensed_bboxes <- list()
   for (bbox in bboxes) {
-    overlap <- any(sapply(condensed_bboxes, function(c) utils.get_bbox_overlap(bbox, c)))
+    overlap <- any(sapply(condensed_bboxes, function(c) get_bbox_overlap(bbox, c)))
     if (!overlap) {
       condensed_bboxes <- append(condensed_bboxes, list(bbox))
     }
@@ -150,7 +141,7 @@ words_to_edges_v <- function(words, word_threshold = DEFAULT_MIN_WORDS_VERTICAL)
     return(list())
   }
   
-  condensed_rects <- lapply(condensed_bboxes, utils.bbox_to_rect)
+  condensed_rects <- lapply(condensed_bboxes, bbox_to_rect)
   sorted_rects <- condensed_rects[order(sapply(condensed_rects, `[[`, "x0"))]
   
   min_top <- min(sapply(sorted_rects, `[[`, "top"))
@@ -204,7 +195,7 @@ edges_to_intersections <- function(edges, x_tolerance = 1, y_tolerance = 1) {
 intersections_to_cells <- function(intersections) {
   edge_connects <- function(p1, p2) {
     edges_to_set <- function(edges) {
-      sapply(edges, utils.obj_to_bbox)
+      sapply(edges, obj_to_bbox)
     }
     
     if (p1[1] == p2[1]) {
@@ -416,7 +407,7 @@ Table <- function(page, cells) {
               local_kwargs$layout_height <- cell[4] - cell[2]
               local_kwargs$layout_bbox <- cell
             }
-            cell_text <- do.call(utils.extract_text, c(list(cell_chars), local_kwargs))
+            cell_text <- do.call(extract_text, c(list(cell_chars), local_kwargs))
             arr <- append(arr, list(cell_text))
           } else {
             arr <- append(arr, list(""))
@@ -577,7 +568,7 @@ TableFinder <- function(page, settings = NULL) {
     
     v_explicit <- lapply(settings$explicit_vertical_lines %||% list(), function(desc) {
       if (is.list(desc)) {
-        res <- lapply(utils.obj_to_edges(desc), function(e) if (e$orientation == "v") e)
+        res <- lapply(obj_to_edges(desc), function(e) if (e$orientation == "v") e)
         return(Filter(Negate(is.null), res))
       } else {
         return(list(
@@ -589,9 +580,9 @@ TableFinder <- function(page, settings = NULL) {
     v_explicit <- unlist(v_explicit, recursive = FALSE)
     
     if (v_strat == "lines") {
-      v_base <- utils.filter_edges(page$edges, "v")
+      v_base <- filter_edges(page$edges, "v")
     } else if (v_strat == "lines_strict") {
-      v_base <- utils.filter_edges(page$edges, "v", edge_type = "line")
+      v_base <- filter_edges(page$edges, "v", edge_type = "line")
     } else if (v_strat == "text") {
       v_base <- words_to_edges_v(words, word_threshold = settings$min_words_vertical)
     } else if (v_strat == "explicit") {
@@ -602,7 +593,7 @@ TableFinder <- function(page, settings = NULL) {
     
     h_explicit <- lapply(settings$explicit_horizontal_lines %||% list(), function(desc) {
       if (is.list(desc)) {
-        res <- lapply(utils.obj_to_edges(desc), function(e) if (e$orientation == "h") e)
+        res <- lapply(obj_to_edges(desc), function(e) if (e$orientation == "h") e)
         return(Filter(Negate(is.null), res))
       } else {
         return(list(
@@ -614,9 +605,9 @@ TableFinder <- function(page, settings = NULL) {
     h_explicit <- unlist(h_explicit, recursive = FALSE)
     
     if (h_strat == "lines") {
-      h_base <- utils.filter_edges(page$edges, "h")
+      h_base <- filter_edges(page$edges, "h")
     } else if (h_strat == "lines_strict") {
-      h_base <- utils.filter_edges(page$edges, "h", edge_type = "line")
+      h_base <- filter_edges(page$edges, "h", edge_type = "line")
     } else if (h_strat == "text") {
       h_base <- words_to_edges_h(words, word_threshold = settings$min_words_horizontal)
     } else if (h_strat == "explicit") {
@@ -635,7 +626,7 @@ TableFinder <- function(page, settings = NULL) {
       join_y_tolerance = settings$join_y_tolerance
     )
     
-    return(utils.filter_edges(edges, min_length = settings$edge_min_length))
+    return(filter_edges(edges, min_length = settings$edge_min_length))
   }
   
   edges <- get_edges()
