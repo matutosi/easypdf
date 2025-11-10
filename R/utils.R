@@ -319,7 +319,7 @@ WordExtractor <- function(
       current_word <- list()
       
       start_next_word <- function(new_char) {
-        nonlocal current_word
+        # nonlocal current_word
         if (length(current_word) > 0) {
           words_list <<- c(words_list, list(current_word))
         }

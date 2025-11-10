@@ -69,5 +69,3 @@ if __name__ == "__main__":
     # overlay session numbers on page numbers
     path_overlaid = "overlaid.pdf"
     overlay_pdf(path_session_a, path_pagenumbers, path_overlaid)
-
-    

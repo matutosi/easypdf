@@ -72,8 +72,8 @@ merge_edges <- function(edges, snap_x_tolerance, snap_y_tolerance, join_x_tolera
     edges <- snap_edges(edges, snap_x_tolerance, snap_y_tolerance)
   }
   
-  _sorted <- edges[order(sapply(edges, get_group))]
-  edge_groups <- split(_sorted, sapply(_sorted, get_group))
+  sorted <- edges[order(sapply(edges, get_group))]
+  edge_groups <- split(sorted, sapply(sorted, get_group))
   
   joined_edges_list <- lapply(names(edge_groups), function(k) {
     items <- edge_groups[[k]]
@@ -303,13 +303,13 @@ cells_to_tables <- function(cells) {
     tables <- append(tables, list(current_cells))
   }
   
-  _sorted <- tables[order(sapply(tables, function(t) {
+  sorted <- tables[order(sapply(tables, function(t) {
     min_coords <- min(sapply(t, function(c) c[2]))
     min_x_for_min_y <- min(sapply(t, function(c) c[1])[sapply(t, function(c) c[2]) == min_coords])
     return(paste(min_coords, min_x_for_min_y))
   }))]
   
-  filtered <- Filter(function(t) length(t) > 1, _sorted)
+  filtered <- Filter(function(t) length(t) > 1, sorted)
   return(filtered)
 }
 
@@ -356,13 +356,13 @@ Column <- function(cells) {
 
 # Table
 Table <- function(page, cells) {
-  _get_rows_or_cols <- function(kind) {
+  get_rows_or_cols <- function(kind) {
     axis <- if (identical(kind, Row)) 0 else 1
     antiaxis <- as.integer(!axis)
 
-    _sorted <- cells[order(sapply(cells, `[[`, antiaxis + 1), sapply(cells, `[[`, axis + 1))]
+    sorted <- cells[order(sapply(cells, `[[`, antiaxis + 1), sapply(cells, `[[`, axis + 1))]
     
-    grouped <- split(_sorted, sapply(_sorted, `[[`, antiaxis + 1))
+    grouped <- split(sorted, sapply(sorted, `[[`, antiaxis + 1))
     
     result <- lapply(names(grouped), function(y) {
       row_cells <- grouped[[y]]
@@ -390,7 +390,7 @@ Table <- function(page, cells) {
       return((h_mid >= x0) && (h_mid < x1) && (v_mid >= top) && (v_mid < bottom))
     }
     
-    rows <- _get_rows_or_cols(Row)
+    rows <- get_rows_or_cols(Row)
     table_arr <- lapply(rows, function(row) {
       arr <- list()
       row_chars <- Filter(function(char) char_in_bbox(char, row$bbox), chars)
@@ -429,8 +429,8 @@ Table <- function(page, cells) {
       max(sapply(cells, `[[`, 3)),
       max(sapply(cells, `[[`, 4))
     ),
-    rows = function() _get_rows_or_cols(Row),
-    columns = function() _get_rows_or_cols(Column),
+    rows = function() get_rows_or_cols(Row),
+    columns = function() get_rows_or_cols(Column),
     extract = extract_content
   )
   class(obj) <- "Table"
@@ -649,4 +649,3 @@ TableFinder <- function(page, settings = NULL) {
     tables = tables
   ))
 }
-
