@@ -30,6 +30,7 @@ Streamlit の web 版 (`*_web.py`) もある．
   **残っていたバグ5件を直し，テストを足した** (27列以上の範囲 / 画像の無い PDF /
   `font_size` が効かない / `extract_tables` の `__main__` / 文字の無いページ)．
   **xfail は 0 件になり，81 passed**．
+  そのうえで **`combine_pdf.exe` と `highlight_pdf.exe` を作り直した** (動作確認済み)．
 
 - 2026-08-28 11:45
   **リファクタリングを 1 → 3 → 5 → 4 → 6 の順に入れた** (共通コードの置き方は案 B)．
@@ -47,6 +48,14 @@ Streamlit の web 版 (`*_web.py`) もある．
   プロジェクト管理用の `.claude/CLAUDE.md` を新規に設置した．
   実装の最終更新は 2025-11-11 で，pdfplumber の R 移植版 (`R/table.R`) の
   README 追加と，表抽出まわりの関数整理までが入っている．
+
+## exe の作り直し
+
+- **2026-08-28 に `combine_pdf.exe` (31.6MB) と `highlight_pdf.exe` (49.3MB) を作り直した**．
+  ツールごとに仮想環境を作り，`pyinstaller --onefile --icon` で固める (README の手順どおり)．
+  入れる版は `combine_pdf`: pandas・openpyxl・pypdf / `highlight_pdf`: pandas・openpyxl・PyMuPDF
+  (**PIL は要らなくなった**)．
+- **`.py` を直したら exe も作り直す**．そうしないと配布物だけ古い動きのまま残る．
 
 ## バグ (2026-08-28 に全部直した)
 
@@ -103,10 +112,8 @@ python tests/compare_all.py     # まとめて突き合わせる
 
 ### 次にやること
 
-- **【要判断】`combine_pdf.exe` と `highlight_pdf.exe` の作り直し**．
-  2026-08-28 の変更は `.py` にしか入っていないので，**配布中の exe は古い動き**のまま
-  (出力を入力として拾う，`gray` が黒，など)．作り直す手順は README の
-  「How to build with pyinstaller」．**いつ作り直すかはユーザが決める**．
+- **【要判断】`highlight_xlsx` の exe を作るか**．`.ico` と `.xlsx` はあるが exe は無く，
+  README の対応表でも「-」のまま．配布に加えるかはユーザが決める．
 - **リファクタリングの案 6つは 2026-08-28 にすべて入れた** (1 → 3 → 5 → 4 → 6 → 2)．
 - **残っているバグ3件** (テストの xfail)．27列以上で範囲が壊れる /
   画像の無い PDF で `max(pages)` が落ちる / `font_name` 無しで `font_size` が効かない．
