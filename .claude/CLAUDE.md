@@ -138,9 +138,14 @@ python tests/compare_all.py     # まとめて突き合わせる
 
 ### 次にやること
 
+**急ぎのものは無い** (2026-08-28 時点)．バグは全部直し，テストは 81 passed で xfail は 0 件．
+リファクタリングの案6つもすべて入れた．
+
 - **【要判断】`highlight_xlsx` の exe を作るか**．`.ico` と `.xlsx` はあるが exe は無く，
   README の対応表でも「-」のまま．配布に加えるかはユーザが決める．
-- **リファクタリングの案 6つは 2026-08-28 にすべて入れた** (1 → 3 → 5 → 4 → 6 → 2)．
-- **残っているバグ3件** (テストの xfail)．27列以上で範囲が壊れる /
-  画像の無い PDF で `max(pages)` が落ちる / `font_name` 無しで `font_size` が効かない．
-- `extract_tables.py` の `__main__` が `path_in`/`path_out` 未定義で落ちる (テスト未作成)．
+- **【要判断】`overlay_pdf.py` の `create_session_number` をどうするか**．
+  いまはどこからも呼ばれておらず，講演番号も `create_number_page` (中央そろえ) で描いている．
+  左そろえにしたい意図があったなら差し替える．要らないなら消す．
+- テストの無いところ: `extract_x_web.py`・`combine_pdf_web.py`・`highlight_pdf_web.py`
+  (Streamlit なので手で動かすしかない)，`R/utils.R` の文字抽出まわり (`WordExtractor`)．
+- `R/` は表抽出しか移植していない．文字抽出 (`extract_words`) は突き合わせていない．
