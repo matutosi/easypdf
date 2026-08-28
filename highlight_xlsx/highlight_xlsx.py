@@ -5,6 +5,7 @@ import pandas as pd
 import openpyxl # Need to read xlsx
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import PatternFill
+from openpyxl.utils import get_column_letter
 
 SUFFIX = "_highlighted"  # 出力に付ける印 (入力として拾わないために使う)
 
@@ -111,11 +112,11 @@ def highlight_xlsx(path_xlsx, keywords, colors, opacity = 0.3):
     out_xlsx = out_path(path_xlsx, SUFFIX)
     wb = openpyxl.load_workbook(path_xlsx)
     sheets = wb.worksheets
-    offset = 64 # need to convert number to character
     for sheet in sheets:
         max_row = sheet.max_row
         max_col = sheet.max_column
-        range_str = "".join([chr(1 + offset), str(1), ":", chr(max_col + offset), str(max_row)])
+        # 27列目からは AA, AB, ... になるので，openpyxl に列名を作らせる
+        range_str = f"A1:{get_column_letter(max_col)}{max_row}"
         for kwd, clr in zip(keywords, colors):
             highlight_cell(sheet, range_str, str(kwd), convert_color_name(clr))
     wb.save(out_xlsx)

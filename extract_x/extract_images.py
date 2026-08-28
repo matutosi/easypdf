@@ -41,11 +41,15 @@ def extract_imgs(path):
         if len(xref) > 0:
             xrefs.append(xref)
             pages.append(i)
-    save_imgs(pdf, path, pages, xrefs)
+    if pages:
+        save_imgs(pdf, path, pages, xrefs)
     pdf.close()
+    return len(pages)
 
 def save_imgs(pdf, path, pages, xrefs, out_dir="images"):
-    dig_p = get_digit(max(pages))
+    if not pages:
+        return
+    dig_p = get_digit(max(pages) + 1)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     for page, xref in zip(pages, xrefs):

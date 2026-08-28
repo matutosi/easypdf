@@ -44,8 +44,8 @@ Rscript tests/compare_r_python.R     # 段階ごとに比較する
 `conftest.py` の `load()` で，パッケージになっていないスクリプトを
 ファイルの場所から読み込む．
 
-## xfail で固定してあるバグ (3件)
+## xfail について
 
-- `extract_images`: 画像の無い PDF で `max(pages)` が落ちる．
-- `overlay_pdf`: `font_name` を渡さないと `font_size` が効かない．
-- `highlight_xlsx`: 範囲を `chr(max_col + 64)` で作るので，27列以上で列名が壊れる．
+**いまは xfail が1件も無い** (2026-08-28 に全部直した)．
+新しくバグを見つけたら，まず `@pytest.mark.xfail(strict=True, reason=...)` で固定してから直す．
+`strict=True` なので，直ると `XPASS` になって失敗し，印の消し忘れに気づける．

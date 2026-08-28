@@ -5,36 +5,49 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4, A5
 from reportlab.lib.units import mm
 
-def create_session_number(c, x, y, str, font_name=None, font_size=None):
-    if font_size:
-        if font_name:
-            c.setFont(font_name, font_size)
-        else:
-            c.setFontSize(font_size)
-    c.drawString(x * mm, y * mm, str)
+def set_font(c, font_name=None, font_size=None):
+    """Sets the font of the canvas.
+    Args:
+        c (canvas.Canvas): The reportlab canvas.
+        font_name (str, optional): The registered font name.
+        font_size (float, optional): The font size in points.
+    Note:
+        setFont() needs both of the name and the size, so the size alone
+        has to go through setFontSize().
+    """
+    if font_name and font_size:
+        c.setFont(font_name, font_size)
+    elif font_name:
+        c.setFont(font_name, c._fontsize)
+    elif font_size:
+        c.setFontSize(font_size)
+
+
+def create_session_number(c, x, y, text, font_name=None, font_size=None):
+    set_font(c, font_name, font_size)
+    c.drawString(x * mm, y * mm, text)
 
 def create_session_numbers(path_pdf, pagesize=A4, start=1, end=1, pre="A", post="", x=20, y=20, font_name=None, font_size=30):
     c = canvas.Canvas(path_pdf, pagesize=pagesize)
     y = (pagesize[1] / mm) - y
     for i in range(start, end + 1):
-        str = f'{pre}{i:02}{post}'
-        create_number_page(c, x, y, str, font_name, font_size)
+        text = f'{pre}{i:02}{post}'
+        # 描画は create_number_page (中央そろえ)．create_session_number は今は使っていない
+        create_number_page(c, x, y, text, font_name, font_size)
         c.showPage()
     c.save()
 
-def create_number_page(c, x, y, str, font_name=None, font_size=None):
-    if font_size:
-        if font_name:
-            c.setFont(font_name, font_size)
-    c.drawCentredString(x * mm, y * mm, str)
+def create_number_page(c, x, y, text, font_name=None, font_size=None):
+    set_font(c, font_name, font_size)
+    c.drawCentredString(x * mm, y * mm, text)
 
 def create_number_pages(path_pdf, pagesize=A4, start=1, end=1, pre="- ", post=" -", x=None, y=10, font_name=None, font_size=None):
     c = canvas.Canvas(path_pdf, pagesize=pagesize)
     if x is None:
         x = (pagesize[0]/ 2) / mm # Centering the text horizontally
     for i in range(start, end + 1):
-        str = f'{pre}{i}{post}'
-        create_number_page(c, x, y, str, font_name, font_size)
+        text = f'{pre}{i}{post}'
+        create_number_page(c, x, y, text, font_name, font_size)
         c.showPage()
     c.save()
 

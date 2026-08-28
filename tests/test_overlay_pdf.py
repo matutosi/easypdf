@@ -61,11 +61,6 @@ class TestOverlayPdf:
 
 
 class TestFontSize:
-    @pytest.mark.xfail(
-        strict=True,
-        reason="create_number_page は font_name が無いと setFont を呼ばず，"
-        "font_size だけ渡しても効かない",
-    )
     def test_font_size_alone_takes_effect(self, tmp_path):
         """font_name を渡さなくても font_size が効く."""
         small = str(tmp_path / "small.pdf")

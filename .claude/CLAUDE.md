@@ -26,6 +26,11 @@ Streamlit の web 版 (`*_web.py`) もある．
 
 ### 現在の状態
 
+- 2026-08-28 11:54
+  **残っていたバグ5件を直し，テストを足した** (27列以上の範囲 / 画像の無い PDF /
+  `font_size` が効かない / `extract_tables` の `__main__` / 文字の無いページ)．
+  **xfail は 0 件になり，81 passed**．
+
 - 2026-08-28 11:45
   **リファクタリングを 1 → 3 → 5 → 4 → 6 の順に入れた** (共通コードの置き方は案 B)．
   main のガード，出力名の `out_path()`，例外を握り潰さない，入力と出力の分離，
@@ -43,26 +48,21 @@ Streamlit の web 版 (`*_web.py`) もある．
   実装の最終更新は 2025-11-11 で，pdfplumber の R 移植版 (`R/table.R`) の
   README 追加と，表抽出まわりの関数整理までが入っている．
 
-## 残っているバグ (2026-08-28 時点．3件)
+## バグ (2026-08-28 に全部直した)
 
-すべて `tests/` に `xfail` (strict) で固定してある．**直すと `XPASS` になって失敗する**ので，
-直したらその印を消す．走らせ方は [tests/README.md](../tests/README.md)．
+**テストの xfail は 0 件**．新しく見つけたら，まず `xfail(strict=True)` で固定してから直す
+(手順は [tests/README.md](../tests/README.md))．
 
-| 場所 | 中身 |
-|---|---|
-| `highlight_xlsx.py` | 範囲を `chr(max_col + 64)` で作るので，27列以上で列名が壊れる |
-| `extract_images.py` | 画像の無い PDF で `max(pages)` が落ちる |
-| `overlay_pdf.py` | `font_name` を渡さないと `font_size` が効かない |
+直したもの: main が読み込むだけで走る (2件) / 設定 xlsx が読めなくても続行して NameError /
+`path.replace(".pdf", ...)` で出力名が壊れる / `extract_tables` がパス付きの名前で落ちる /
+`csv` の使い回し / 出力を入力として拾う / 設定ファイル自身を対象にする /
+`load_workbook(xlsx)` が大域を見ている / `gray` が黒 / 27列以上で範囲が壊れる /
+画像の無い PDF で `max(pages)` が落ちる / `font_name` 無しで `font_size` が効かない /
+`extract_tables` の `__main__` が未定義変数で落ちる / 文字の無いページで `write(None)` /
+`next` が `continue` の書き間違い / `R/table.R` が動かない．
 
-テストを書いていないもの．
-
-- `extract_tables.py` の `__main__` が `path_in`/`path_out` 未定義で落ちる．
-- `extract_texts.py` は文字の無いページで `write(None)` になる．`next` は `continue` の書き間違い．
-
-**直したもの** (2026-08-28)．main が読み込むだけで走る / 設定 xlsx が読めなくても続行して
-NameError / `path.replace(".pdf", ...)` で出力名が壊れる / `extract_tables` がパス付きの
-ファイル名で落ちる / `csv` の使い回し / 出力を入力として拾う / 設定ファイル自身を対象にする /
-`load_workbook(xlsx)` が大域を見ている / `R/table.R` が動かない．
+**`overlay_pdf.py` の `create_session_number` は今は呼ばれていない** (講演番号も
+`create_number_page` で中央そろえに描いている)．左そろえにしたいなら差し替える．
 
 ## リファクタリング (2026-08-27 に案を出し，2026-08-28 に 1・3・4・5・6 を実施)
 

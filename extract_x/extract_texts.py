@@ -48,7 +48,7 @@ def save_texts(path_pdf, texts):
             os.makedirs(page_dir)
         path_text = out_path(path_pdf, f'_{page}', '.txt', page_dir)
         with open(path_text, "w", encoding='utf-8') as f:
-            f.write(text)
+            f.write(text or "")  # 文字の無いページは None が返る
 
 """
 path_pdf = 'README.pdf'
@@ -63,7 +63,7 @@ def extract_table(path_pdf):
     for p, page in enumerate(pdf.pages, start = 1):
         tables = page.find_tables()
         if not tables: # no table
-            next
+            continue
         for i, table in enumerate(tables, start = 1):
             table = table.extract()
             df = pd.DataFrame(table)
@@ -73,6 +73,8 @@ def extract_table(path_pdf):
 
 def save_tables(path_pdf, tables):
     xlsx_tables = out_path(path_pdf, "_tables", ".xlsx")
+    if len(tables) == 0:  # 表が1つも無ければ何も書かない
+        return None
     dig_p = get_digit(max(tables['page']))
     dig_n = get_digit(max(tables['no']))
     with pd.ExcelWriter(xlsx_tables) as writer:

@@ -39,17 +39,15 @@ class TestHighlightXlsx:
         out = hx.highlight_xlsx(path, ["atari"], ["red"])
         assert openpyxl.load_workbook(out) is not None
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="範囲を chr(max_col + 64) で作るので，27列以上で列名が壊れる",
-    )
     def test_wide_sheet(self, tmp_path):
         """27列以上のシートでも範囲が壊れない."""
         path = make_xlsx(tmp_path / "wide.xlsx", n_col=30)
         out = hx.highlight_xlsx(path, ["atari"], ["red"])
         wb = openpyxl.load_workbook(out)
         ranges = [str(r) for r in wb.active.conditional_formatting]
+        assert ranges
         assert all("[" not in r for r in ranges)
+        assert any("A1:AD2" in r for r in ranges)  # 30列 x 2行 -> A1:AD2
 
 
 class TestMain:

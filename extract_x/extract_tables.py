@@ -1,5 +1,7 @@
+import glob
 import os
 import shutil
+import sys
 import tempfile
 
 import pandas as pd
@@ -61,20 +63,43 @@ def _write_csv(pdf_files, dir):
                     for j, tb in enumerate(tbls):
                         pd.DataFrame(tb).to_csv(out_path(name, f'_{i+1}_{j+1}', '.csv', dir), header=False, index=False)
 
-if __name__ == "__main__":
-    # path_in = "mtcars.pdf"
-    # path_out = 'mtcars.xlsx'
+def pdf_tables2xlsx(path_pdf, path_xlsx=None):
+    """Extracts the tables in a PDF and writes them into one xlsx file.
+    Args:
+        path_pdf (str): The path to the PDF file.
+        path_xlsx (str, optional): The path to the output xlsx file.
+            Uses "<pdf body>_tables.xlsx" if None.
+    Returns:
+        str: The path to the output file, or None if the PDF has no table.
+    """
+    if path_xlsx is None:
+        path_xlsx = out_path(path_pdf, "_tables", ".xlsx")
     tables = []
-    with pdfplumber.open(path_in) as pdf:
+    with pdfplumber.open(path_pdf) as pdf:
         for page in pdf.pages:
             tables.append(page.extract_tables())
-
-    with pd.ExcelWriter(path_out) as writer:
+    if not any(tables):
+        print(f"No table in {path_pdf}")
+        return None
+    with pd.ExcelWriter(path_xlsx) as writer:
         for i, table in enumerate(tables):
-            if(table == []):
-                pass
-            else:
-                for j, tb in enumerate(table):
-                    pd.DataFrame(tb).to_excel(writer, sheet_name=f'{i+1}_{j+1}')
+            for j, tb in enumerate(table):
+                pd.DataFrame(tb).to_excel(writer, sheet_name=f'{i+1}_{j+1}')
+    return path_xlsx
 
 
+def main():
+    """Writes the tables of every PDF in the current directory into xlsx files."""
+    pdfs = sorted(glob.glob("*.pdf"))
+    if not pdfs:
+        print("No PDF file in this directory")
+        input("Press Any Key")
+        return 1
+    for path_pdf in pdfs:
+        print(f"extracting tables: {path_pdf}")
+        pdf_tables2xlsx(path_pdf)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

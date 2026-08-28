@@ -40,6 +40,13 @@ class TestExtractTexts:
         assert len(texts) == 3
         assert "Mazda RX4" in texts[0]
 
+    def test_page_without_text(self, tmp_path, root, monkeypatch):
+        """文字の無いページでも落ちない (None を書こうとしない)."""
+        monkeypatch.chdir(tmp_path)
+        texts = [None, "a"]
+        ex.save_texts("x.pdf", texts)
+        assert open(os.path.join("pages", "x_1.txt"), encoding="utf-8").read() == ""
+
     def test_save_texts(self, tmp_path, pdf_mtcars, monkeypatch):
         """ページごとに txt を書き出す."""
         monkeypatch.chdir(tmp_path)
@@ -47,6 +54,36 @@ class TestExtractTexts:
         ex.save_texts("mtcars.pdf", texts)
         written = sorted(os.path.basename(p) for p in glob.glob("pages/*.txt"))
         assert written == ["mtcars_1.txt", "mtcars_2.txt", "mtcars_3.txt"]
+
+
+class TestPdfTables2Xlsx:
+    def test_writes_xlsx(self, tmp_path, pdf_mtcars, monkeypatch):
+        """表を1つの xlsx にまとめる."""
+        shutil.copy(pdf_mtcars, tmp_path / "mtcars.pdf")
+        monkeypatch.chdir(tmp_path)
+        out = et.pdf_tables2xlsx("mtcars.pdf")
+        assert out == "mtcars_tables.xlsx"
+        assert os.path.exists(out)
+
+    def test_pdf_without_table(self, tmp_path, root, monkeypatch):
+        """表の無い PDF では None を返し，ファイルを作らない."""
+        shutil.copy(root / "pdf" / "01.pdf", tmp_path / "01.pdf")
+        monkeypatch.chdir(tmp_path)
+        assert et.pdf_tables2xlsx("01.pdf") is None
+        assert not os.path.exists("01_tables.xlsx")
+
+    def test_main_without_pdf(self, tmp_path, monkeypatch):
+        """PDF が1つも無ければ 1 を返して終える."""
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("builtins.input", lambda *a: "")
+        assert et.main() == 1
+
+    def test_main(self, tmp_path, pdf_mtcars, monkeypatch):
+        """作業ディレクトリの PDF をまとめて処理する."""
+        shutil.copy(pdf_mtcars, tmp_path / "mtcars.pdf")
+        monkeypatch.chdir(tmp_path)
+        assert et.main() == 0
+        assert os.path.exists("mtcars_tables.xlsx")
 
 
 class TestPdfTables2ZipCsv:
@@ -91,11 +128,16 @@ class TestPdfTables2ZipCsv:
 
 
 class TestExtractImages:
-    @pytest.mark.xfail(
-        strict=True,
-        reason="画像の無い PDF では pages が空になり，max(pages) で落ちる",
-    )
     def test_pdf_without_images(self, tmp_path, pdf_mtcars, monkeypatch):
-        """画像の無い PDF でも落ちない."""
+        """画像の無い PDF でも落ちず，0 を返す."""
         monkeypatch.chdir(tmp_path)
-        ei.extract_imgs(pdf_mtcars)
+        assert ei.extract_imgs(pdf_mtcars) == 0
+        assert not os.path.exists("images")
+
+    def test_pdf_with_images(self, tmp_path, root, monkeypatch):
+        """画像のある PDF から画像を書き出す."""
+        monkeypatch.chdir(tmp_path)
+        n_pages = ei.extract_imgs(str(root / "pdf" / "README.pdf"))
+        if n_pages == 0:
+            pytest.skip("画像のある PDF が手元に無い")
+        assert glob.glob("images/*")
