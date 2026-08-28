@@ -103,6 +103,10 @@ python tests/compare_all.py     # まとめて突き合わせる
 
 ### 次にやること
 
+- **【要判断】`combine_pdf.exe` と `highlight_pdf.exe` の作り直し**．
+  2026-08-28 の変更は `.py` にしか入っていないので，**配布中の exe は古い動き**のまま
+  (出力を入力として拾う，`gray` が黒，など)．作り直す手順は README の
+  「How to build with pyinstaller」．**いつ作り直すかはユーザが決める**．
 - **リファクタリングの案 6つは 2026-08-28 にすべて入れた** (1 → 3 → 5 → 4 → 6 → 2)．
 - **残っているバグ3件** (テストの xfail)．27列以上で範囲が壊れる /
   画像の無い PDF で `max(pages)` が落ちる / `font_name` 無しで `font_size` が効かない．
