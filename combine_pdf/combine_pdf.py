@@ -77,6 +77,7 @@ def main(path_xlsx="combine_pdf.xlsx"):
         input("Press Any Key")
         return 1
 
+    df = df.dropna(subset=["inputs", "outputs"])
     for output_pdf, input_pdfs in extract_file_names(df):
         print("combining")
         print(input_pdfs)

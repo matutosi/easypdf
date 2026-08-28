@@ -74,6 +74,19 @@ class TestMain:
         with fitz.open("aa.pdf") as doc:
             assert doc.page_count == 2
 
+    def test_blank_rows_are_ignored(self, cp, tmp_path, root, monkeypatch):
+        """設定の空行は読み飛ばす (nan.pdf を探しに行かない)."""
+        for name in ["01.pdf", "02.pdf"]:
+            shutil.copy(root / "pdf" / name, tmp_path / name)
+        pd.DataFrame(
+            {"inputs": ["01.pdf", "02.pdf", None], "outputs": ["aa.pdf", "aa.pdf", None]}
+        ).to_excel(tmp_path / "combine_pdf.xlsx", index=False)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("builtins.input", lambda *a: "")
+        assert cp.main() == 0
+        with fitz.open("aa.pdf") as doc:
+            assert doc.page_count == 2
+
     def test_missing_setting_returns_1(self, cp, tmp_path, monkeypatch):
         """設定 xlsx が無ければ 1 を返して終える (NameError にしない)."""
         monkeypatch.chdir(tmp_path)

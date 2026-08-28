@@ -77,3 +77,37 @@ class TestHighlightPdf:
         shutil.copy(pdf_01, work)
         out = hp.highlight_pdf(str(work), ["1"], ["red"])
         assert out.endswith("01_highlighted.pdf")
+
+
+class TestMain:
+    def test_reads_setting_and_highlights(self, tmp_path, pdf_01, monkeypatch):
+        """設定 xlsx を読んで強調表示する."""
+        import pandas as pd
+
+        shutil.copy(pdf_01, tmp_path / "01.pdf")
+        pd.DataFrame({"keywords": ["1"], "colors": ["red"]}).to_excel(
+            tmp_path / "highlight_pdf.xlsx", index=False
+        )
+        monkeypatch.chdir(tmp_path)
+        assert hp.main() == 0
+        assert os.path.exists("01_highlighted.pdf")
+
+    def test_missing_setting_returns_1(self, tmp_path, monkeypatch):
+        """設定 xlsx が無ければ 1 を返して終える."""
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("builtins.input", lambda *a: "")
+        assert hp.main() == 1
+
+    def test_blank_rows_are_ignored(self, tmp_path, pdf_01, monkeypatch):
+        """設定の空行は読み飛ばす (nan を探しに行かない)."""
+        import pandas as pd
+
+        shutil.copy(pdf_01, tmp_path / "01.pdf")
+        pd.DataFrame(
+            {"keywords": ["1", None], "colors": ["red", None]}
+        ).to_excel(tmp_path / "highlight_pdf.xlsx", index=False)
+        monkeypatch.chdir(tmp_path)
+        assert hp.main() == 0
+        with fitz.open("01_highlighted.pdf") as doc:
+            annots = [a for page in doc for a in page.annots()]
+        assert len(annots) > 0

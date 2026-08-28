@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import pandas as pd
 import openpyxl # Need to read xlsx
@@ -83,7 +84,7 @@ def read_excel(path):
 
 def highlight_xlsx(path_xlsx, keywords, colors, opacity = 0.3):
     out_xlsx = out_path(path_xlsx, "_highlighted")
-    wb = openpyxl.load_workbook(xlsx)
+    wb = openpyxl.load_workbook(path_xlsx)
     sheets = wb.worksheets
     offset = 64 # need to convert number to character
     for sheet in sheets:
@@ -101,11 +102,26 @@ def highlight_cell(sheet, range_str, keyword, color):
     rule = FormulaRule(formula=[condition], fill=color_fill)
     sheet.conditional_formatting.add(range_str, rule)
 
-if __name__ == "__main__":
-    input_xlsxs = glob.glob("*.xlsx")
-    df = read_excel("highlight_xlsx.xlsx")
-    keywords = df.keywords
-    colors = df.colors
-    for xlsx in input_xlsxs:
-        out_xlsx = highlight_xlsx(xlsx, keywords, colors)
+def main(path_xlsx="highlight_xlsx.xlsx"):
+    """Reads the setting xlsx and highlights the xlsx files in the current directory.
+    Args:
+        path_xlsx (str): The path to the setting xlsx file.
+    Returns:
+        int: 0 on success, 1 if the setting cannot be used.
+    """
+    df = read_excel(path_xlsx)
+    if df is None:
+        return 1
+    df = df.dropna(subset=["keywords", "colors"])
+    if len(df) == 0:
+        print(f"No keywords in {path_xlsx}")
+        input("Press Any Key")
+        return 1
+    for xlsx in glob.glob("*.xlsx"):
+        out_xlsx = highlight_xlsx(xlsx, df.keywords, df.colors)
         os.startfile(out_xlsx)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

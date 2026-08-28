@@ -1,4 +1,5 @@
 import os
+import sys
 import glob
 import pandas as pd
 import openpyxl # Need to read xlsx
@@ -68,7 +69,6 @@ def highlight_text(doc, keyword, color, opacity = 0.3):
     Returns:
         fitz.Document: The updated PyMuPDF document object.
     """
-    print(f'{color=}')
     for page in doc:
         text_instances = page.search_for(keyword)
         for inst in text_instances:
@@ -131,11 +131,25 @@ def read_excel(path):
         print(f"Error: {e}")
         input("Press Any Key")
 
-if __name__ == "__main__":
+def main(path_xlsx="highlight_pdf.xlsx"):
+    """Reads the setting xlsx and highlights the PDFs in the current directory.
+    Args:
+        path_xlsx (str): The path to the setting xlsx file.
+    Returns:
+        int: 0 on success, 1 if the setting cannot be used.
+    """
+    df = read_excel(path_xlsx)
+    if df is None:
+        return 1
+    df = df.dropna(subset=["keywords", "colors"])
+    if len(df) == 0:
+        print(f"No keywords in {path_xlsx}")
+        input("Press Any Key")
+        return 1
+    for pdf in glob.glob("*.pdf"):
+        highlight_pdf(pdf, df.keywords, df.colors)
+    return 0
 
-    input_pdfs = glob.glob("*.pdf")
-    df = read_excel("highlight_pdf.xlsx")
-    keywords = df.keywords
-    colors = df.colors
-    for pdf in input_pdfs:
-        highlight_pdf(pdf, keywords, colors)
+
+if __name__ == "__main__":
+    sys.exit(main())
