@@ -4,11 +4,42 @@
 ## 簡単PDFとは   
 ## What is easyPDF?   
 
-簡単PDFは，PDFの結合などを簡単に行うためのソフトです．
-2025年2月現在では結合(combine_pdf)と強調表示(highlight_pdf)のみです．
+簡単PDFは，PDFの結合・強調表示・重ね合わせ・抽出などを簡単に行うためのソフトです．
+exe を配布しているのは結合(combine_pdf)と強調表示(highlight_pdf)の2つで，
+そのほかは Python スクリプトとして使います．
+Streamlit を使った web 版(`*_web.py`)もあります．
 
-easyPDF is a software for easy manipulations such as combining PDFs.
-Only combine (combine_pdf) and highlight (highlight_pdf) is available at 2025 Feb.
+easyPDF is a software for easy manipulations of PDF such as combining, highlighting,
+overlaying and extracting.
+Execute files (exe) are distributed for combine (combine_pdf) and highlight (highlight_pdf);
+the others are used as Python scripts.
+Web versions (`*_web.py`) with Streamlit are also available.
+
+### 機能の対応表
+### Feature table
+
+| 機能 / Feature | ディレクトリ | スクリプト | exe | 設定 xlsx | web 版 |
+| ---------------------------------- | -------------- | ----------------------------------------------------- | ------------------ | -------------------- | ---------------------- |
+| 結合 / Combine                     | `combine_pdf/` | `combine_pdf.py` (pypdf), `combine_pdf2.py` (PyMuPDF)  | `combine_pdf.exe`  | `combine_pdf.xlsx`   | `combine_pdf_web.py`   |
+| 強調表示 (PDF) / Highlight PDF     | `highlight_pdf/` | `highlight_pdf.py`                                  | `highlight_pdf.exe` | `highlight_pdf.xlsx` | `highlight_pdf_web.py` |
+| 強調表示 (Excel) / Highlight xlsx  | `highlight_xlsx/` | `highlight_xlsx.py`                                 | -                  | `highlight_xlsx.xlsx` | -                     |
+| 重ね合わせ / Overlay               | `overlay_pdf/` | `overlay_pdf.py`                                       | -                  | -                    | -                      |
+| 抽出 / Extract                     | `extract_x/`   | `extract_images.py`, `extract_tables.py`, `extract_texts.py` | -            | -                    | `extract_x_web.py` (表のみ / tables only) |
+| 表抽出の R 移植 (試作) / R port    | `R/`           | `table.R`, `utils.R`                                   | -                  | -                    | -                      |
+
+- **重ね合わせ(overlay_pdf)** は，ページ番号や講演番号(`A-1` など)の PDF を作り，
+  もとの PDF に重ねます(reportlab + PyMuPDF)．
+- **抽出(extract_x)** は，PDF から画像・表・文字を取り出します(PyMuPDF + pdfplumber)．
+- **R 移植(`R/`)** は pdfplumber の表抽出を R へ移す試作で，まだ完成していません
+  (`R/README.txt` を見てください)．
+- web 版は `streamlit run <スクリプト名>` で動かします．
+
+- **overlay_pdf** creates a PDF of page numbers or session numbers (e.g. `A-1`)
+  and overlays it on the original PDF (reportlab + PyMuPDF).
+- **extract_x** extracts images, tables and texts from a PDF (PyMuPDF + pdfplumber).
+- **R port** (`R/`) is a work in progress to port table extraction of pdfplumber to R
+  (see `R/README.txt`).
+- Run the web versions with `streamlit run <script>`.
 
 
 **注意**
