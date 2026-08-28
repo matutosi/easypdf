@@ -33,7 +33,9 @@ Streamlit の web 版 (`*_web.py`) もある．
   **残っていたバグ5件を直し，テストを足した** (27列以上の範囲 / 画像の無い PDF /
   `font_size` が効かない / `extract_tables` の `__main__` / 文字の無いページ)．
   **xfail は 0 件になり，81 passed**．
-  そのうえで **`combine_pdf.exe` と `highlight_pdf.exe` を作り直した** (動作確認済み)．
+  そのうえで **`combine_pdf.exe` と `highlight_pdf.exe` を作り直し** (動作確認済み)，
+  **exe を git から外して Release `v2026.08.28` で配る形にした**．
+  履歴からも消したので `.git` は 303MB → 約 1MB．
 
 - 2026-08-28 11:45
   **リファクタリングを 1 → 3 → 5 → 4 → 6 の順に入れた** (共通コードの置き方は案 B)．
@@ -52,14 +54,33 @@ Streamlit の web 版 (`*_web.py`) もある．
   実装の最終更新は 2025-11-11 で，pdfplumber の R 移植版 (`R/table.R`) の
   README 追加と，表抽出まわりの関数整理までが入っている．
 
+## exe の配り方 (2026-08-28 に変えた)
+
+- **exe は git で管理せず，[Releases](https://github.com/matutosi/easypdf/releases) で配る**．
+  `.gitignore` に `*.exe` がある．手元の exe は消していない (無視されるだけ)．
+- **古い exe は履歴からも消した**．`git filter-repo --path-glob '*.exe' --invert-paths` で
+  7個 (計 266MB) を落とし，**`.git` は 303MB → 約 1MB** になった．
+  全コミットのハッシュが変わったので，`git log` の古い記録や外の参照とは合わない．
+  Release のタグ `v2026.08.28` も新しい側へ付け替えてある．
+  **GitHub 側の使用量は，向こうの掃除が回るまで減らない**ことがある．
+- **3台の PC には Dropbox 経由で書き換え後の `.git` が届く**．
+  もし他の PC で古い履歴のまま作業してしまったら，そちらを捨てて同期を待つ．
+
+### 新しい版を出す手順
+
+1. `.py` を直す → `python -m pytest tests -q` を通す．
+2. ツールごとに仮想環境を作り，`pyinstaller --onefile --icon <絶対パス>` で固める
+   (`--icon` は spec の場所から解決されるので**絶対パスで渡す**)．
+3. できた exe を一時ディレクトリで実際に動かして確かめる．
+4. `gh release create <タグ> <exe...> --title ... --notes-file ...`．
+
 ## exe の作り直し
 
 - **2026-08-28 に `combine_pdf.exe` (31.6MB) と `highlight_pdf.exe` (49.3MB) を作り直した**．
   ツールごとに仮想環境を作り，`pyinstaller --onefile --icon` で固める (README の手順どおり)．
   入れる版は `combine_pdf`: pandas・openpyxl・pypdf / `highlight_pdf`: pandas・openpyxl・PyMuPDF
   (**PIL は要らなくなった**)．
-- **`.py` を直したら exe も作り直し，Release に添付する**
-  (`gh release create <タグ> <exe> --title ... --notes ...`)．
+- **`.py` を直したら exe も作り直し，Release に添付する**．
   そうしないと配布物だけ古い動きのまま残る．
 
 ## バグ (2026-08-28 に全部直した)
