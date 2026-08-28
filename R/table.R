@@ -12,7 +12,7 @@ DEFAULT_MIN_WORDS_HORIZONTAL <- 1
 snap_edges <- function(edges, x_tolerance = DEFAULT_SNAP_TOLERANCE, y_tolerance = DEFAULT_SNAP_TOLERANCE) {
   by_orientation <- list(v = list(), h = list())
   for (e in edges) {
-    if (e$orientation == "v") {
+    if (identical(e$orientation, "v")) {
       by_orientation$v <- append(by_orientation$v, list(e))
     } else {
       by_orientation$h <- append(by_orientation$h, list(e))
@@ -61,11 +61,15 @@ join_edge_group <- function(edges, orientation, tolerance = DEFAULT_JOIN_TOLERAN
 merge_edges <- function(edges, snap_x_tolerance, snap_y_tolerance, join_x_tolerance, join_y_tolerance) {
   
   get_group <- function(edge) {
-    if (edge$orientation == "h") {
+    if (identical(edge$orientation, "h")) {
       return(paste0("h_", edge$top))
     } else {
       return(paste0("v_", edge$x0))
     }
+  }
+  
+  if (length(edges) == 0) {
+    return(list())
   }
   
   if (snap_x_tolerance > 0 || snap_y_tolerance > 0) {
@@ -131,7 +135,9 @@ words_to_edges_v <- function(words, word_threshold = DEFAULT_MIN_WORDS_VERTICAL)
   
   condensed_bboxes <- list()
   for (bbox in bboxes) {
-    overlap <- any(sapply(condensed_bboxes, function(c) get_bbox_overlap(bbox, c)))
+    overlap <- any(vapply(condensed_bboxes,
+                          function(cb) !is.null(get_bbox_overlap(bbox, cb)),
+                          logical(1)))
     if (!overlap) {
       condensed_bboxes <- append(condensed_bboxes, list(bbox))
     }
@@ -166,8 +172,8 @@ words_to_edges_v <- function(words, word_threshold = DEFAULT_MIN_WORDS_VERTICAL)
 # edges_to_intersections: エッジから交点を検出する
 edges_to_intersections <- function(edges, x_tolerance = 1, y_tolerance = 1) {
   intersections <- list()
-  v_edges <- Filter(function(x) x$orientation == "v", edges)
-  h_edges <- Filter(function(x) x$orientation == "h", edges)
+  v_edges <- Filter(function(x) identical(x$orientation, "v"), edges)
+  h_edges <- Filter(function(x) identical(x$orientation, "h"), edges)
   
   v_edges <- v_edges[order(sapply(v_edges, `[[`, "x0"), sapply(v_edges, `[[`, "top"))]
   h_edges <- h_edges[order(sapply(h_edges, `[[`, "top"), sapply(h_edges, `[[`, "x0"))]
@@ -193,9 +199,14 @@ edges_to_intersections <- function(edges, x_tolerance = 1, y_tolerance = 1) {
 
 # intersections_to_cells: 交点からセル（四角形）を検出する
 intersections_to_cells <- function(intersections) {
+  if (length(intersections) < 2) {
+    return(list())
+  }
+  
   edge_connects <- function(p1, p2) {
     edges_to_set <- function(edges) {
-      sapply(edges, obj_to_bbox)
+      # 1辺を1つのキーにする (行列のまま intersect すると数値ごとに比べてしまう)
+      sapply(edges, function(e) paste(obj_to_bbox(e), collapse = "_"))
     }
     
     if (p1[1] == p2[1]) {
@@ -217,9 +228,8 @@ intersections_to_cells <- function(intersections) {
   points <- points[order(points[,1], points[,2]),]
   
   find_smallest_cell <- function(i) {
-    if (i == nrow(points) - 1) return(NULL)
     pt <- points[i,]
-    rest <- points[(i+1):nrow(points),]
+    rest <- points[(i+1):nrow(points), , drop = FALSE]
     below <- rest[rest[,1] == pt[1],,drop=FALSE]
     right <- rest[rest[,2] == pt[2],,drop=FALSE]
     
@@ -254,6 +264,9 @@ intersections_to_cells <- function(intersections) {
 
 # cells_to_tables: セルをテーブルにまとめる
 cells_to_tables <- function(cells) {
+  if (length(cells) == 0) {
+    return(list())
+  }
   
   bbox_to_corners <- function(bbox) {
     x0 <- bbox[1]

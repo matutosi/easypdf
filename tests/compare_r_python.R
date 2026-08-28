@@ -30,26 +30,50 @@ edges_final <- as_edges(py$edges_final)
 # 座標の集合を比べるための整形 (丸め誤差を吸収する)
 key_xy <- function(x, y) paste(round(as.numeric(x), 3), round(as.numeric(y), 3), sep = ",")
 key_bbox <- function(b) paste(round(as.numeric(b), 3), collapse = ",")
+# 空のリストでも character(0) を返す (表の無い PDF で落ちないように)
+keys <- function(x, f) if (length(x) == 0) character(0) else sort(vapply(x, f, character(1)))
 
 cat("== 入力 ==\n")
 cat(sprintf("  pdf   : %s (page %s)\n", py$source$pdf, py$source$page))
 cat(sprintf("  edges : raw %d -> final %d\n", length(py$edges_raw), length(edges_final)))
 cat("== 段階ごとの比較 ==\n")
 
-# 1. edges_to_intersections (入力は Python の edges_final)
+# 1. エッジの整理 (入力は Python の生のエッジ)
+#    filter_edges -> merge_edges -> filter_edges(min_length) の順は TableFinder と同じ
+edges_raw <- as_edges(py$edges_raw)
+r_edges <- try({
+  v <- filter_edges(edges_raw, "v")
+  h <- filter_edges(edges_raw, "h")
+  merged <- merge_edges(c(v, h), snap_x_tolerance = 3, snap_y_tolerance = 3,
+                        join_x_tolerance = 3, join_y_tolerance = 3)
+  filter_edges(merged, min_length = 3)
+}, silent = TRUE)
+if (inherits(r_edges, "try-error")) {
+  record("edges", FALSE, sub("\n.*", "", conditionMessage(attr(r_edges, "condition"))))
+} else {
+  r_e <- keys(r_edges, function(e) key_bbox(obj_to_bbox(e)))
+  p_e <- keys(edges_final, function(e) key_bbox(obj_to_bbox(e)))
+  record("edges", identical(r_e, p_e),
+         sprintf("R %d / Python %d, 共通 %d",
+                 length(r_e), length(p_e), length(intersect(r_e, p_e))))
+}
+
+# 2. edges_to_intersections (入力は Python の edges_final)
 r_ints <- try(edges_to_intersections(edges_final, 3, 3), silent = TRUE)
 if (inherits(r_ints, "try-error")) {
   record("intersections", FALSE, sub("\n.*", "", conditionMessage(attr(r_ints, "condition"))))
   r_ints <- NULL
 } else {
-  r_keys <- sort(sapply(strsplit(names(r_ints), "_"), function(p) key_xy(p[1], p[2])))
-  p_keys <- sort(sapply(py$intersections, function(p) key_xy(p[[1]], p[[2]])))
+  nm <- names(r_ints)
+  if (is.null(nm)) nm <- character(0)
+  r_keys <- keys(strsplit(nm, "_"), function(p) key_xy(p[1], p[2]))
+  p_keys <- keys(py$intersections, function(p) key_xy(p[[1]], p[[2]]))
   record("intersections", identical(r_keys, p_keys),
          sprintf("R %d / Python %d, 共通 %d",
                  length(r_keys), length(p_keys), length(intersect(r_keys, p_keys))))
 }
 
-# 2. intersections_to_cells (入力は R 自身の交点．無ければ飛ばす)
+# 3. intersections_to_cells (入力は R 自身の交点．無ければ飛ばす)
 r_cells <- NULL
 if (!is.null(r_ints)) {
   r_cells <- try(intersections_to_cells(r_ints), silent = TRUE)
@@ -57,8 +81,8 @@ if (!is.null(r_ints)) {
     record("cells", FALSE, sub("\n.*", "", conditionMessage(attr(r_cells, "condition"))))
     r_cells <- NULL
   } else {
-    r_k <- sort(sapply(r_cells, key_bbox))
-    p_k <- sort(sapply(py$cells, function(c) key_bbox(unlist(c))))
+    r_k <- keys(r_cells, key_bbox)
+    p_k <- keys(py$cells, function(c) key_bbox(unlist(c)))
     record("cells", identical(r_k, p_k),
            sprintf("R %d / Python %d, 共通 %d",
                    length(r_k), length(p_k), length(intersect(r_k, p_k))))
@@ -67,7 +91,7 @@ if (!is.null(r_ints)) {
   record("cells", FALSE, "前段が失敗したため未実行")
 }
 
-# 3. cells_to_tables (入力は Python の cells にそろえて，この段階だけを見る)
+# 4. cells_to_tables (入力は Python の cells にそろえて，この段階だけを見る)
 p_cells <- lapply(py$cells, function(c) as.numeric(unlist(c)))
 r_tables <- try(cells_to_tables(p_cells), silent = TRUE)
 if (inherits(r_tables, "try-error")) {
@@ -80,6 +104,22 @@ if (inherits(r_tables, "try-error")) {
          sprintf("R %d 表 (セル %s) / Python %d 表 (セル %s)",
                  length(r_tables), paste(sapply(r_tables, length), collapse = "/"),
                  n_py, paste(sapply(py$tables, function(t) t$n_cells), collapse = "/")))
+}
+
+# 5. TableFinder を通しで動かす (lines 戦略なので page は edges と bbox だけでよい)
+page <- list(edges = edges_raw, bbox = unlist(py$page_bbox))
+r_finder <- try(TableFinder(page), silent = TRUE)
+if (inherits(r_finder, "try-error")) {
+  record("TableFinder", FALSE,
+         sub("\n.*", "", conditionMessage(attr(r_finder, "condition"))))
+} else {
+  n_cells <- as.numeric(sapply(r_finder$tables, function(t) length(t$cells)))
+  p_cells <- as.numeric(sapply(py$tables, function(t) t$n_cells))
+  record("TableFinder",
+         length(r_finder$tables) == length(py$tables) && identical(n_cells, p_cells),
+         sprintf("R %d 表 (セル %s) / Python %d 表 (セル %s)",
+                 length(r_finder$tables), paste(n_cells, collapse = "/"),
+                 length(py$tables), paste(p_cells, collapse = "/")))
 }
 
 cat("== まとめ ==\n")

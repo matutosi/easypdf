@@ -596,3 +596,175 @@ dedupe_chars <- function(chars, tolerance = 1, extra_attrs = c("fontname", "size
   
   return(unique_sorted_chars)
 }
+
+
+# --- geometry.R の機能 (pdfplumber/utils/geometry.py からの移植) ---
+# table.R から呼ばれているのに未定義だったもの (2026-08-28 に補った)
+
+# obj_to_bbox: オブジェクトの bbox を c(x0, top, x1, bottom) で返す
+obj_to_bbox <- function(obj) {
+  c(obj$x0, obj$top, obj$x1, obj$bottom)
+}
+
+# move_object: オブジェクトを軸方向へ平行移動する
+move_object <- function(obj, axis, value) {
+  if (axis == "h") {
+    obj$x0 <- obj$x0 + value
+    obj$x1 <- obj$x1 + value
+  } else if (axis == "v") {
+    obj$top <- obj$top + value
+    obj$bottom <- obj$bottom + value
+    if (!is.null(obj$doctop)) obj$doctop <- obj$doctop + value
+    if (!is.null(obj$y0)) obj$y0 <- obj$y0 - value
+    if (!is.null(obj$y1)) obj$y1 <- obj$y1 - value
+  } else {
+    stop("Axis must be 'h' or 'v'")
+  }
+  return(obj)
+}
+
+# resize_object: 1辺だけを動かし，幅・高さを引き直す
+resize_object <- function(obj, key, value) {
+  if (!(key %in% c("x0", "x1", "top", "bottom"))) {
+    stop("Key must be one of x0, x1, top, bottom")
+  }
+  diff <- value - obj[[key]]
+  obj[[key]] <- value
+  if (key == "x0") {
+    obj$width <- obj$x1 - value
+  } else if (key == "x1") {
+    obj$width <- value - obj$x0
+  } else if (key == "top") {
+    if (!is.null(obj$doctop)) obj$doctop <- obj$doctop + diff
+    obj$height <- obj$height - diff
+    if (!is.null(obj$y1)) obj$y1 <- obj$y1 - diff
+  } else if (key == "bottom") {
+    obj$height <- obj$height + diff
+    if (!is.null(obj$y0)) obj$y0 <- obj$y0 - diff
+  }
+  return(obj)
+}
+
+# get_bbox_overlap: 2つの bbox の重なりを返す (重ならなければ NULL)
+get_bbox_overlap <- function(a, b) {
+  o_left <- max(a[1], b[1])
+  o_top <- max(a[2], b[2])
+  o_right <- min(a[3], b[3])
+  o_bottom <- min(a[4], b[4])
+  o_width <- o_right - o_left
+  o_height <- o_bottom - o_top
+  if (o_height >= 0 && o_width >= 0 && (o_height + o_width) > 0) {
+    return(c(o_left, o_top, o_right, o_bottom))
+  }
+  return(NULL)
+}
+
+# snap_objects: 近い値をクラスタの平均へそろえる
+snap_objects <- function(objs, attr, tolerance) {
+  if (length(objs) == 0) {
+    return(list())
+  }
+  axis <- c(x0 = "h", x1 = "h", top = "v", bottom = "v")[[attr]]
+  clusters <- cluster_objects(objs, attr, tolerance)
+  snapped <- lapply(clusters, function(cluster) {
+    values <- sapply(cluster, function(o) o[[attr]])
+    avg <- sum(values) / length(values)
+    lapply(cluster, function(o) move_object(o, axis, avg - o[[attr]]))
+  })
+  return(unlist(snapped, recursive = FALSE))
+}
+
+# line_to_edge: 線をエッジにする
+line_to_edge <- function(line) {
+  line$orientation <- if (line$top == line$bottom) "h" else "v"
+  return(line)
+}
+
+# rect_to_edges: 矩形を4辺のエッジに分ける
+rect_to_edges <- function(rect) {
+  top <- rect
+  top$object_type <- "rect_edge"
+  top$height <- 0
+  top$y0 <- rect$y1
+  top$bottom <- rect$top
+  top$orientation <- "h"
+
+  bottom <- rect
+  bottom$object_type <- "rect_edge"
+  bottom$height <- 0
+  bottom$y1 <- rect$y0
+  bottom$top <- rect$top + rect$height
+  if (!is.null(rect$doctop)) bottom$doctop <- rect$doctop + rect$height
+  bottom$orientation <- "h"
+
+  left <- rect
+  left$object_type <- "rect_edge"
+  left$width <- 0
+  left$x1 <- rect$x0
+  left$orientation <- "v"
+
+  right <- rect
+  right$object_type <- "rect_edge"
+  right$width <- 0
+  right$x0 <- rect$x1
+  right$orientation <- "v"
+
+  return(list(top, bottom, left, right))
+}
+
+# curve_to_edges: 曲線を，隣り合う点をつないだエッジに分ける
+curve_to_edges <- function(curve) {
+  pts <- curve$pts
+  if (length(pts) < 2) {
+    return(list())
+  }
+  lapply(seq_len(length(pts) - 1), function(i) {
+    p0 <- pts[[i]]
+    p1 <- pts[[i + 1]]
+    orientation <- if (p0[1] == p1[1]) "v" else if (p0[2] == p1[2]) "h" else NULL
+    list(
+      object_type = "curve_edge",
+      x0 = min(p0[1], p1[1]),
+      x1 = max(p0[1], p1[1]),
+      top = min(p0[2], p1[2]),
+      doctop = min(p0[2], p1[2]) + ((curve$doctop %||% curve$top) - curve$top),
+      bottom = max(p0[2], p1[2]),
+      width = abs(p0[1] - p1[1]),
+      height = abs(p0[2] - p1[2]),
+      orientation = orientation
+    )
+  })
+}
+
+# obj_to_edges: オブジェクトの種類に応じてエッジへ分ける
+obj_to_edges <- function(obj) {
+  t <- obj$object_type
+  if (!is.null(t) && grepl("_edge", t)) {
+    return(list(obj))
+  } else if (identical(t, "line")) {
+    return(list(line_to_edge(obj)))
+  } else if (identical(t, "rect")) {
+    return(rect_to_edges(obj))
+  } else if (identical(t, "curve")) {
+    return(curve_to_edges(obj))
+  }
+  stop(paste("Cannot convert to edges:", t))
+}
+
+# filter_edges: 向き・種類・最小の長さで絞る
+filter_edges <- function(edges, orientation = NULL, edge_type = NULL, min_length = 1) {
+  if (!is.null(orientation) && !(orientation %in% c("v", "h"))) {
+    stop("Orientation must be 'v' or 'h'")
+  }
+  Filter(function(e) {
+    # orientation は曲線由来のエッジで空になることがある (Python の None)
+    size <- if (identical(e$orientation, "v")) {
+      e$height %||% (e$bottom - e$top)
+    } else {
+      e$width %||% (e$x1 - e$x0)
+    }
+    type_ok <- is.null(edge_type) || identical(e$object_type, edge_type)
+    orientation_ok <- is.null(orientation) || identical(e$orientation, orientation)
+    type_ok && orientation_ok && size >= min_length
+  }, edges)
+}

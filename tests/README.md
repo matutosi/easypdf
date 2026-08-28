@@ -13,9 +13,19 @@ python -m pytest tests -q
 R 移植版と Python の突き合わせは別に走らせる (R と jsonlite が要る)．
 
 ```
-python tests/dump_pdfplumber.py      # tests/fixtures/*.json を作る
+python tests/compare_all.py          # pdf/ と extract_x/ の PDF をまとめて突き合わせる
+```
+
+1つの PDF だけ見るときは，JSON を作ってから R にかける．
+
+```
+python tests/dump_pdfplumber.py      # tests/fixtures/mtcars_page1.json を作る
 Rscript tests/compare_r_python.R     # 段階ごとに比較する
 ```
+
+比べる段階は5つ (`edges` → `intersections` → `cells` → `tables` → `TableFinder`)．
+前の4つは Python の出力を入力に与えるので，**どの段階で食い違うかが分かる**．
+最後の `TableFinder` だけは通しで動かす．
 
 ## 中身
 
@@ -25,23 +35,18 @@ Rscript tests/compare_r_python.R     # 段階ごとに比較する
 | `test_extract_x.py` | 入れ子の深さ，桁数，文字の抽出，表の csv/zip 化 |
 | `test_overlay_pdf.py` | ページ番号・講演番号の生成と重ね合わせ |
 | `test_highlight_xlsx.py` | 色名の変換，関数として呼べるか，27列以上の範囲 |
-| `test_combine_pdf.py` | 読み込むだけで main が走ってしまう状態 |
+| `test_common_helpers.py` | 各ディレクトリへ写した共通処理がずれていないか |
+| `test_combine_pdf.py` | 設定の読み込み，結合，main の戻り値 |
 | `dump_pdfplumber.py` | pdfplumber の各段階を JSON へ書き出す |
 | `compare_r_python.R` | 同じ段階を R 移植版で走らせて比べる |
+| `compare_all.py` | 複数の PDF について上の2つをまとめて回す |
 
 `conftest.py` の `load()` で，パッケージになっていないスクリプトを
 ファイルの場所から読み込む．
 
-## xfail で固定してあるバグ (10件)
+## xfail で固定してあるバグ (4件)
 
 - `highlight_pdf`: `gray` が黒 (0,0,0) になっている．
-- `highlight_pdf`: 出力名を `path.replace(".pdf", ...)` で作るので，
-  途中に `.pdf` を含むパスで壊れる．
-- `extract_tables`: ファイル名にパスが入ると，出力先が `csv/<パス>_1_1.csv` になって落ちる．
-- `extract_tables`: `csv` ディレクトリを消さずに使い回すので，前回の結果が zip に残る．
 - `extract_images`: 画像の無い PDF で `max(pages)` が落ちる．
 - `overlay_pdf`: `font_name` を渡さないと `font_size` が効かない．
-- `combine_pdf.py` / `combine_pdf2.py`: main の処理が module の直下にあり，
-  読み込むだけで実行される (2件)．
-- `highlight_xlsx`: `load_workbook(xlsx)` が引数ではなく大域の `xlsx` を見ている．
 - `highlight_xlsx`: 範囲を `chr(max_col + 64)` で作るので，27列以上で列名が壊れる．
