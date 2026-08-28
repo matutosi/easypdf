@@ -5,6 +5,29 @@ import openpyxl # Need to read xlsx
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import PatternFill
 
+def out_path(path, suffix="", ext=None, out_dir=None):
+    """Makes an output path from an input path.
+    Args:
+        path (str): The input file path (with or without directories).
+        suffix (str): The string to be added to the file body (e.g. "_highlighted").
+        ext (str, optional): The output extension (e.g. ".csv"). Keeps the input one if None.
+        out_dir (str, optional): The output directory. Uses the input one if None.
+    Returns:
+        str: The output file path.
+    Example:
+        >>> out_path("a.pdf.d/01.pdf", "_highlighted")
+        "a.pdf.d/01_highlighted.pdf"
+        >>> out_path("x/mtcars.pdf", "_1_1", ".csv", "csv")
+        "csv/mtcars_1_1.csv"
+    """
+    dir_name, base = os.path.split(path)
+    body, org_ext = os.path.splitext(base)
+    name = f"{body}{suffix}{ext or org_ext}"
+    if out_dir is not None:
+        return os.path.join(out_dir, name)
+    return os.path.join(dir_name, name) if dir_name else name
+
+
 def convert_color_name(color):
     """
     Converts a color name to its RGB value.
@@ -59,7 +82,7 @@ def read_excel(path):
 
 
 def highlight_xlsx(path_xlsx, keywords, colors, opacity = 0.3):
-    out_xlsx = path_xlsx.replace(".xlsx", "_highlighted.xlsx")
+    out_xlsx = out_path(path_xlsx, "_highlighted")
     wb = openpyxl.load_workbook(xlsx)
     sheets = wb.worksheets
     offset = 64 # need to convert number to character

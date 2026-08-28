@@ -4,6 +4,29 @@ import pandas as pd
 import numpy as np
 import pdfplumber
 
+def out_path(path, suffix="", ext=None, out_dir=None):
+    """Makes an output path from an input path.
+    Args:
+        path (str): The input file path (with or without directories).
+        suffix (str): The string to be added to the file body (e.g. "_highlighted").
+        ext (str, optional): The output extension (e.g. ".csv"). Keeps the input one if None.
+        out_dir (str, optional): The output directory. Uses the input one if None.
+    Returns:
+        str: The output file path.
+    Example:
+        >>> out_path("a.pdf.d/01.pdf", "_highlighted")
+        "a.pdf.d/01_highlighted.pdf"
+        >>> out_path("x/mtcars.pdf", "_1_1", ".csv", "csv")
+        "csv/mtcars_1_1.csv"
+    """
+    dir_name, base = os.path.split(path)
+    body, org_ext = os.path.splitext(base)
+    name = f"{body}{suffix}{ext or org_ext}"
+    if out_dir is not None:
+        return os.path.join(out_dir, name)
+    return os.path.join(dir_name, name) if dir_name else name
+
+
 # utils
 def get_digit(x):
     n_digit = math.ceil(np.log10(x + 1))
@@ -23,7 +46,7 @@ def save_texts(path_pdf, texts):
         page_dir = 'pages'
         if not os.path.exists(page_dir):
             os.makedirs(page_dir)
-        path_text = f'{page_dir}/{path_pdf}_{page}.txt'
+        path_text = out_path(path_pdf, f'_{page}', '.txt', page_dir)
         with open(path_text, "w", encoding='utf-8') as f:
             f.write(text)
 
@@ -49,7 +72,7 @@ def extract_table(path_pdf):
     return pd.DataFrame(all_tables)
 
 def save_tables(path_pdf, tables):
-    xlsx_tables = path_pdf.replace(".pdf", "_tables.xlsx")
+    xlsx_tables = out_path(path_pdf, "_tables", ".xlsx")
     dig_p = get_digit(max(tables['page']))
     dig_n = get_digit(max(tables['no']))
     with pd.ExcelWriter(xlsx_tables) as writer:

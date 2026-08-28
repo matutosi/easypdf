@@ -46,7 +46,7 @@ class TestExtractTexts:
         texts = ex.extract_texts(pdf_mtcars)
         ex.save_texts("mtcars.pdf", texts)
         written = sorted(os.path.basename(p) for p in glob.glob("pages/*.txt"))
-        assert written == ["mtcars.pdf_1.txt", "mtcars.pdf_2.txt", "mtcars.pdf_3.txt"]
+        assert written == ["mtcars_1.txt", "mtcars_2.txt", "mtcars_3.txt"]
 
 
 class TestPdfTables2ZipCsv:
@@ -61,15 +61,13 @@ class TestPdfTables2ZipCsv:
         assert len(names) > 0
         assert all(n.endswith(".csv") for n in names)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="ファイル名にパスが入ると，出力先が csv/<パス>_1_1.csv になって落ちる "
-        "(os.path.basename を取っていない)",
-    )
     def test_accepts_path_with_directory(self, tmp_path, pdf_mtcars, monkeypatch):
         """ディレクトリを含むパスを渡しても動く."""
         monkeypatch.chdir(tmp_path)
-        et.pdf_tables2zip_csv([pdf_mtcars])
+        zip_file = et.pdf_tables2zip_csv([pdf_mtcars])
+        with zipfile.ZipFile(zip_file) as z:
+            names = z.namelist()
+        assert all(n.startswith("mtcars_") for n in names)
 
     @pytest.mark.xfail(
         strict=True,

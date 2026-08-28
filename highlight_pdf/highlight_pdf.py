@@ -5,6 +5,29 @@ import openpyxl # Need to read xlsx
 import fitz     # PyMuPDF
 from PIL import ImageColor
 
+def out_path(path, suffix="", ext=None, out_dir=None):
+    """Makes an output path from an input path.
+    Args:
+        path (str): The input file path (with or without directories).
+        suffix (str): The string to be added to the file body (e.g. "_highlighted").
+        ext (str, optional): The output extension (e.g. ".csv"). Keeps the input one if None.
+        out_dir (str, optional): The output directory. Uses the input one if None.
+    Returns:
+        str: The output file path.
+    Example:
+        >>> out_path("a.pdf.d/01.pdf", "_highlighted")
+        "a.pdf.d/01_highlighted.pdf"
+        >>> out_path("x/mtcars.pdf", "_1_1", ".csv", "csv")
+        "csv/mtcars_1_1.csv"
+    """
+    dir_name, base = os.path.split(path)
+    body, org_ext = os.path.splitext(base)
+    name = f"{body}{suffix}{ext or org_ext}"
+    if out_dir is not None:
+        return os.path.join(out_dir, name)
+    return os.path.join(dir_name, name) if dir_name else name
+
+
 def highlight_pdf(path_pdf, keywords, colors, opacity = 0.3):
     """
     Highlights specified keywords in a PDF file.
@@ -24,10 +47,10 @@ def highlight_pdf(path_pdf, keywords, colors, opacity = 0.3):
         "input_highlighted.pdf"
     """
     if isinstance(path_pdf, str):
-        out_pdfs = path_pdf.replace(".pdf", "_highlighted.pdf")
+        out_pdfs = out_path(path_pdf, "_highlighted")
         doc = fitz.open(path_pdf)
     else: # streamlit
-        out_pdfs = path_pdf.name.replace(".pdf", "_highlighted.pdf")
+        out_pdfs = out_path(path_pdf.name, "_highlighted")
         doc = fitz.open(stream = path_pdf.read(), filetype = "pdf")
     for kwd, clr in zip(keywords, colors):
         highlight_text(doc, str(kwd), convert_color_name(clr), opacity = opacity)

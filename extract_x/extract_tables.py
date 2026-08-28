@@ -4,6 +4,29 @@ import shutil
 
 import pdfplumber
 
+def out_path(path, suffix="", ext=None, out_dir=None):
+    """Makes an output path from an input path.
+    Args:
+        path (str): The input file path (with or without directories).
+        suffix (str): The string to be added to the file body (e.g. "_highlighted").
+        ext (str, optional): The output extension (e.g. ".csv"). Keeps the input one if None.
+        out_dir (str, optional): The output directory. Uses the input one if None.
+    Returns:
+        str: The output file path.
+    Example:
+        >>> out_path("a.pdf.d/01.pdf", "_highlighted")
+        "a.pdf.d/01_highlighted.pdf"
+        >>> out_path("x/mtcars.pdf", "_1_1", ".csv", "csv")
+        "csv/mtcars_1_1.csv"
+    """
+    dir_name, base = os.path.split(path)
+    body, org_ext = os.path.splitext(base)
+    name = f"{body}{suffix}{ext or org_ext}"
+    if out_dir is not None:
+        return os.path.join(out_dir, name)
+    return os.path.join(dir_name, name) if dir_name else name
+
+
 def depth(lst):
     dep = -1
     if isinstance(lst,list):
@@ -21,10 +44,7 @@ def pdf_tables2zip_csv(pdf_files, zip_file="tables.zip"):
     if not os.path.exists(dir):
         os.makedirs(dir)
     for up_file in pdf_files:
-        if not isinstance(up_file, str):
-            file_body = os.path.splitext(up_file.name)[0]
-        else:
-            file_body = os.path.splitext(up_file)[0]
+        name = up_file if isinstance(up_file, str) else up_file.name
         with pdfplumber.open(up_file) as pdf:
             for i, page in enumerate(pdf.pages):
                 tbls = page.extract_tables()
@@ -32,7 +52,7 @@ def pdf_tables2zip_csv(pdf_files, zip_file="tables.zip"):
                     pass
                 else:
                     for j, tb in enumerate(tbls):
-                        pd.DataFrame(tb).to_csv(f'{dir}/{file_body}_{i+1}_{j+1}.csv', header=False, index=False)
+                        pd.DataFrame(tb).to_csv(out_path(name, f'_{i+1}_{j+1}', '.csv', dir), header=False, index=False)
     shutil.make_archive(os.path.splitext(zip_file)[0], format='zip', root_dir=dir)
     return(zip_file)
 

@@ -69,11 +69,6 @@ class TestHighlightPdf:
         out = hp.highlight_pdf(str(work), ["1"], ["red"])
         assert out.endswith("01_highlighted.pdf")
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="path.replace('.pdf', ...) が最初の .pdf を置き換えるため，"
-        "途中に .pdf を含むパスで出力先が壊れる",
-    )
     def test_output_name_with_pdf_in_directory(self, tmp_path, pdf_01):
         """途中に .pdf を含むパスでも出力名が壊れない."""
         d = tmp_path / "a.pdf.d"
