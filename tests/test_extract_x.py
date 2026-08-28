@@ -141,3 +141,44 @@ class TestExtractImages:
         if n_pages == 0:
             pytest.skip("画像のある PDF が手元に無い")
         assert glob.glob("images/*")
+
+
+class TestExtractTable:
+    def test_returns_one_row_per_table(self, pdf_mtcars):
+        """表ごとに1行の DataFrame を返す (page と no が付く)."""
+        tables = ex.extract_table(pdf_mtcars)
+        assert len(tables) > 0
+        assert list(tables.columns) == ["page", "no", "table"]
+        assert tables["page"].min() >= 1
+        assert tables["no"].min() >= 1
+
+    def test_pdf_without_table(self, root):
+        """表の無い PDF では空の DataFrame を返す."""
+        tables = ex.extract_table(str(root / "pdf" / "01.pdf"))
+        assert len(tables) == 0
+
+
+class TestSaveTables:
+    def test_writes_one_sheet_per_table(self, tmp_path, pdf_mtcars, monkeypatch):
+        """表ごとに1シートの xlsx を書き出す."""
+        import openpyxl
+
+        opened = []
+        monkeypatch.setattr(ex.os, "startfile", opened.append, raising=False)
+        monkeypatch.chdir(tmp_path)
+        shutil.copy(pdf_mtcars, tmp_path / "mtcars.pdf")
+        tables = ex.extract_table("mtcars.pdf")
+        out = ex.save_tables("mtcars.pdf", tables)
+        assert out == "mtcars_tables.xlsx"
+        assert opened == [out]  # 書き出したあとに開く
+        wb = openpyxl.load_workbook(out)
+        assert len(wb.sheetnames) == len(tables)
+
+    def test_no_table_writes_nothing(self, tmp_path, root, monkeypatch):
+        """表が無ければ None を返し，ファイルを作らない."""
+        monkeypatch.setattr(ex.os, "startfile", lambda *a: None, raising=False)
+        monkeypatch.chdir(tmp_path)
+        shutil.copy(root / "pdf" / "01.pdf", tmp_path / "01.pdf")
+        tables = ex.extract_table("01.pdf")
+        assert ex.save_tables("01.pdf", tables) is None
+        assert not os.path.exists("01_tables.xlsx")
