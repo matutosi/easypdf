@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 __pycache__/
+
+# exe は git で管理せず，GitHub Releases で配る (2026-08-28)
+*.exe

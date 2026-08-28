@@ -33,6 +33,7 @@ Web versions (`*_web.py`) with Streamlit are also available.
 - **R 移植(`R/`)** は pdfplumber の表抽出を R へ移す試作で，まだ完成していません
   (`R/README.txt` を見てください)．
 - web 版は `streamlit run <スクリプト名>` で動かします．
+- **exe は [Releases](https://github.com/matutosi/easypdf/releases) にあります** (リポジトリには置いていない)．
 
 - **overlay_pdf** creates a PDF of page numbers or session numbers (e.g. `A-1`)
   and overlays it on the original PDF (reportlab + PyMuPDF).
@@ -40,6 +41,7 @@ Web versions (`*_web.py`) with Streamlit are also available.
 - **R port** (`R/`) is a work in progress to port table extraction of pdfplumber to R
   (see `R/README.txt`).
 - Run the web versions with `streamlit run <script>`.
+- The exe files are in [Releases](https://github.com/matutosi/easypdf/releases), not in this repository.
 
 
 **注意**
@@ -63,7 +65,13 @@ If you have any problems, please contact Matsumura (matutosi@gmail.com).
 ## 導入方法   
 ## Installation   
 
+**exe は [Releases](https://github.com/matutosi/easypdf/releases) から入手してください**
+(リポジトリには置いていません)．設定ファイルの `*.xlsx` はこのリポジトリにあります．
+
 *_pdf.exe と *_pdf.xlsx を任意のディレクトリに保存するだけです．   
+
+**Download the exe from [Releases](https://github.com/matutosi/easypdf/releases)**
+(they are not in this repository). The setting files (`*.xlsx`) are in this repository.
 
 copy *_pdf.exe and *_pdf.xlsx to one directory.
 

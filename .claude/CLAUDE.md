@@ -19,6 +19,9 @@ Streamlit の web 版 (`*_web.py`) もある．
 
 - 利用者は **exe と xlsx を任意のディレクトリに置くだけ**で使える状態を保つ
   (インストール作業を要求しない)．
+- **exe は git で管理せず，[GitHub Releases](https://github.com/matutosi/easypdf/releases)
+  で配る** (2026-08-28 から)．`.gitignore` に `*.exe` を入れてある．
+  `.py` を直したら exe を作り直し，**新しいタグで Release を作って添付する**．
 - 免責事項を README に明記してある．連絡先は matutosi@gmail.com．
 - `__pycache__` は追跡しない (`.gitignore` 済み)．
 
@@ -55,7 +58,9 @@ Streamlit の web 版 (`*_web.py`) もある．
   ツールごとに仮想環境を作り，`pyinstaller --onefile --icon` で固める (README の手順どおり)．
   入れる版は `combine_pdf`: pandas・openpyxl・pypdf / `highlight_pdf`: pandas・openpyxl・PyMuPDF
   (**PIL は要らなくなった**)．
-- **`.py` を直したら exe も作り直す**．そうしないと配布物だけ古い動きのまま残る．
+- **`.py` を直したら exe も作り直し，Release に添付する**
+  (`gh release create <タグ> <exe> --title ... --notes ...`)．
+  そうしないと配布物だけ古い動きのまま残る．
 
 ## バグ (2026-08-28 に全部直した)
 
