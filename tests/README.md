@@ -42,13 +42,14 @@ Rscript tests/compare_r_python.R     # 段階ごとに比較する
 | `test_highlight_pdf.py` | 色名の変換，注釈が付くか，出力名 |
 | `test_extract_x.py` | 入れ子の深さ，桁数，文字の抽出，表の csv/zip 化 |
 | `test_overlay_pdf.py` | ページ番号・講演番号の生成と重ね合わせ |
-| `test_highlight_xlsx.py` | 色名の変換，関数として呼べるか，27列以上の範囲 |
 | `test_common_helpers.py` | 各ディレクトリへ写した共通処理・色の表がずれていないか |
 | `test_web.py` | Streamlit の web 版が立ち上がるか (AppTest) |
 | `test_combine_pdf.py` | 設定の読み込み，結合，main の戻り値 |
 | `dump_pdfplumber.py` | pdfplumber の各段階を JSON へ書き出す |
 | `compare_r_python.R` | 同じ段階を R 移植版で走らせて比べる |
 | `compare_all.py` | 複数の PDF について上の2つをまとめて回す |
+
+**`test_highlight_xlsx.py` は 2026-08-28 に消した** (xlsx の強調表示を convex へ寄せたため)．
 
 `conftest.py` の `load()` で，パッケージになっていないスクリプトを
 ファイルの場所から読み込む．

@@ -14,7 +14,6 @@ from conftest import load
 
 MODULES = {
     "highlight_pdf": load("highlight_pdf/highlight_pdf.py"),
-    "highlight_xlsx": load("highlight_xlsx/highlight_xlsx.py"),
     "extract_tables": load("extract_x/extract_tables.py"),
     "extract_texts": load("extract_x/extract_texts.py"),
     "extract_images": load("extract_x/extract_images.py"),
@@ -23,14 +22,14 @@ MODULES = {
 }
 
 # 関数名 -> それを持つべき module 名
+# `read_excel`・`input_files`・`convert_color_hex`・`COLORS` は，
+# 2026-08-28 に highlight_xlsx を convex へ寄せてから highlight_pdf だけのものになった．
+# 写しが2つ以上になったら，ここへ戻して一致を見張る．
 SHARED = {
-    "out_path": ["highlight_pdf", "highlight_xlsx", "extract_tables",
+    "out_path": ["highlight_pdf", "extract_tables",
                  "extract_texts", "extract_images"],
     "extract_file_names": ["combine_pdf", "combine_pdf2"],
     "get_digit": ["extract_texts", "extract_images"],
-    "read_excel": ["highlight_pdf", "highlight_xlsx"],
-    "input_files": ["highlight_pdf", "highlight_xlsx"],
-    "convert_color_hex": ["highlight_pdf", "highlight_xlsx"],
 }
 
 
@@ -47,10 +46,15 @@ def test_shared_function_is_identical(name, owners):
         assert src == first, f"{owner} の {name} が {owners[0]} とずれている"
 
 
-def test_color_table_is_identical():
-    """色の表は，どのファイルでも同じにする."""
-    tables = {o: MODULES[o].COLORS for o in ["highlight_pdf", "highlight_xlsx"]}
-    assert tables["highlight_pdf"] == tables["highlight_xlsx"]
+def test_color_table_has_the_expected_names():
+    """色の表は，README に書いた名前をすべて持ち，値は 6桁の16進にする."""
+    colors = MODULES["highlight_pdf"].COLORS
+    names = ["white", "purple", "yellow", "red", "sky", "blue", "green", "gray"]
+    assert sorted(colors) == sorted(names)
+    for value in colors.values():
+        assert len(value) == 6
+        assert value == value.upper()
+        int(value, 16)
 
 
 class TestOutPath:
@@ -85,8 +89,8 @@ class TestInputFiles:
 
     def test_skips_the_setting_file(self, tmp_path, monkeypatch):
         """設定ファイル自身は入力として拾わない."""
-        input_files = MODULES["highlight_xlsx"].input_files
-        for name in ["data.xlsx", "highlight_xlsx.xlsx"]:
+        input_files = MODULES["highlight_pdf"].input_files
+        for name in ["data.pdf", "highlight_pdf.xlsx"]:
             (tmp_path / name).write_text("")
         monkeypatch.chdir(tmp_path)
-        assert input_files("*.xlsx", "highlight_xlsx.xlsx") == ["data.xlsx"]
+        assert input_files("*.pdf", "highlight_pdf.xlsx") == ["data.pdf"]

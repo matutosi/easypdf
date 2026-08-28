@@ -5,12 +5,14 @@
 ## What is easyPDF?   
 
 簡単PDFは，PDFの結合・強調表示・重ね合わせ・抽出などを簡単に行うためのソフトです．
+扱うのは PDF だけです(Excel の強調表示は convex にあります．下の対応表を見てください)．
 exe を配布しているのは結合(combine_pdf)と強調表示(highlight_pdf)の2つで，
 そのほかは Python スクリプトとして使います．
 Streamlit を使った web 版(`*_web.py`)もあります．
 
 easyPDF is a software for easy manipulations of PDF such as combining, highlighting,
-overlaying and extracting.
+overlaying and extracting. It handles PDF only
+(highlighting Excel files is in convex; see the feature table below).
 Execute files (exe) are distributed for combine (combine_pdf) and highlight (highlight_pdf);
 the others are used as Python scripts.
 Web versions (`*_web.py`) with Streamlit are also available.
@@ -22,7 +24,6 @@ Web versions (`*_web.py`) with Streamlit are also available.
 | ---------------------------------- | -------------- | ----------------------------------------------------- | ------------------ | -------------------- | ---------------------- |
 | 結合 / Combine                     | `combine_pdf/` | `combine_pdf.py` (pypdf), `combine_pdf2.py` (PyMuPDF)  | `combine_pdf.exe`  | `combine_pdf.xlsx`   | `combine_pdf_web.py`   |
 | 強調表示 (PDF) / Highlight PDF     | `highlight_pdf/` | `highlight_pdf.py`                                  | `highlight_pdf.exe` | `highlight_pdf.xlsx` | `highlight_pdf_web.py` |
-| 強調表示 (Excel) / Highlight xlsx  | `highlight_xlsx/` | `highlight_xlsx.py`                                 | `highlight_xlsx.exe` | `highlight_xlsx.xlsx` | -                   |
 | 重ね合わせ / Overlay               | `overlay_pdf/` | `overlay_pdf.py`                                       | -                  | -                    | -                      |
 | 抽出 / Extract                     | `extract_x/`   | `extract_images.py`, `extract_tables.py`, `extract_texts.py` | -            | -                    | `extract_x_web.py` (表のみ / tables only) |
 | 表抽出の R 移植 (試作) / R port    | `R/`           | `table.R`, `utils.R`                                   | -                  | -                    | -                      |
@@ -34,6 +35,9 @@ Web versions (`*_web.py`) with Streamlit are also available.
   (`R/README.txt` を見てください)．
 - web 版は `streamlit run <スクリプト名>` で動かします．
 - **exe は [Releases](https://github.com/matutosi/easypdf/releases) にあります** (リポジトリには置いていない)．
+- **Excel (xlsx) の強調表示は [convex](https://github.com/matutosi/convex) にあります**
+  (2026-08-28 に easyPDF から外しました)．簡単PDF は PDF だけを扱います．
+  convex は web でも使えます: <https://matutosi.shinyapps.io/convex/>
 
 - **overlay_pdf** creates a PDF of page numbers or session numbers (e.g. `A-1`)
   and overlays it on the original PDF (reportlab + PyMuPDF).
@@ -42,6 +46,9 @@ Web versions (`*_web.py`) with Streamlit are also available.
   (see `R/README.txt`).
 - Run the web versions with `streamlit run <script>`.
 - The exe files are in [Releases](https://github.com/matutosi/easypdf/releases), not in this repository.
+- **Highlighting Excel (xlsx) files moved to [convex](https://github.com/matutosi/convex)**
+  (removed from easyPDF on 2026-08-28). easyPDF handles PDF only.
+  convex also runs on the web: <https://matutosi.shinyapps.io/convex/>
 
 
 **注意**

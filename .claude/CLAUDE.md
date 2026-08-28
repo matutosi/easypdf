@@ -9,7 +9,6 @@ Streamlit の web 版 (`*_web.py`) もある．
 
 - `combine_pdf/` … PDF の結合 (`combine_pdf.py`，`combine_pdf2.py`，`combine_pdf_web.py`)
 - `highlight_pdf/` … PDF の強調表示 (`highlight_pdf.py`，`highlight_pdf_web.py`)
-- `highlight_xlsx/` … Excel の強調表示 (`highlight_xlsx.py`)
 - `overlay_pdf/` … PDF の重ね合わせ (`overlay_pdf.py`)
 - `extract_x/` … PDF からの抽出 (`extract_images.py`，`extract_tables.py`，`extract_texts.py`，`extract_x_web.py`)
 - `R/` … pdfplumber の表抽出を R へ移植したもの (`table.R`，`utils.R`)
@@ -17,6 +16,9 @@ Streamlit の web 版 (`*_web.py`) もある．
 
 ## 決めごと
 
+- **扱うのは PDF だけ**．**Excel (xlsx) の強調表示は [convex](../convex) が持つ**
+  (2026-08-28 ユーザ確定．重複していた `highlight_xlsx/` を easypdf から消した)．
+  Excel まわりの相談が来たら convex 側で直す．
 - 利用者は **exe と xlsx を任意のディレクトリに置くだけ**で使える状態を保つ
   (インストール作業を要求しない)．
 - **exe は git で管理せず，[GitHub Releases](https://github.com/matutosi/easypdf/releases)
@@ -28,6 +30,11 @@ Streamlit の web 版 (`*_web.py`) もある．
 ## 進捗状況
 
 ### 現在の状態
+
+- 2026-08-28 12:52
+  **`highlight_xlsx/` を消し，easyPDF を PDF 専用にした** (convex と重複していたため)．
+  一致テストの対象から外し，README に convex への案内を入れた．テストは 77 passed / 2 skipped
+  (skip は opencv 未導入の web 版で，以前から同じ)．
 
 - 2026-08-28 11:54
   **残っていたバグ5件を直し，テストを足した** (27列以上の範囲 / 画像の無い PDF /
@@ -146,7 +153,12 @@ python tests/compare_all.py     # まとめて突き合わせる
 
 ### 次にやること
 
-**急ぎのものは無い** (2026-08-28 時点)．バグは全部直し，テストは 81 passed で xfail は 0 件．
+- **【要判断】Releases の `highlight_xlsx.exe` をどうするか**．
+  `v2026.08.28` に添付したままで，リポジトリには元のコードが無い状態になっている．
+  外すなら `gh release delete-asset v2026.08.28 highlight_xlsx.exe`．
+  **手元の `highlight_xlsx/highlight_xlsx.exe` と `__pycache__` も残っている**
+  (git 管理外なので `git rm` では消えない)．
+- **急ぎのものは無い** (2026-08-28 時点)．バグは全部直し，テストは 81 passed で xfail は 0 件．
 リファクタリングの案6つもすべて入れた．
 
 - **`combine_pdf_web.py` は `opencv-python` が要る** (サムネイルの作成に使っている)．
