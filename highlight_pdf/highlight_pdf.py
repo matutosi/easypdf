@@ -6,6 +6,9 @@ import openpyxl # Need to read xlsx
 import fitz     # PyMuPDF
 from PIL import ImageColor
 
+SUFFIX = "_highlighted"  # 出力に付ける印 (入力として拾わないために使う)
+
+
 def out_path(path, suffix="", ext=None, out_dir=None):
     """Makes an output path from an input path.
     Args:
@@ -48,10 +51,10 @@ def highlight_pdf(path_pdf, keywords, colors, opacity = 0.3):
         "input_highlighted.pdf"
     """
     if isinstance(path_pdf, str):
-        out_pdfs = out_path(path_pdf, "_highlighted")
+        out_pdfs = out_path(path_pdf, SUFFIX)
         doc = fitz.open(path_pdf)
     else: # streamlit
-        out_pdfs = out_path(path_pdf.name, "_highlighted")
+        out_pdfs = out_path(path_pdf.name, SUFFIX)
         doc = fitz.open(stream = path_pdf.read(), filetype = "pdf")
     for kwd, clr in zip(keywords, colors):
         highlight_text(doc, str(kwd), convert_color_name(clr), opacity = opacity)
@@ -131,6 +134,24 @@ def read_excel(path):
         print(f"Error: {e}")
         input("Press Any Key")
 
+def input_files(pattern, path_setting=None):
+    """Lists the input files, without the outputs of the previous runs.
+    Args:
+        pattern (str): The glob pattern (e.g. "*.pdf").
+        path_setting (str, optional): The setting file to be excluded.
+    Returns:
+        list: The paths to be processed.
+    """
+    files = []
+    for path in sorted(glob.glob(pattern)):
+        if SUFFIX in os.path.splitext(os.path.basename(path))[0]:
+            continue
+        if path_setting is not None and os.path.abspath(path) == os.path.abspath(path_setting):
+            continue
+        files.append(path)
+    return files
+
+
 def main(path_xlsx="highlight_pdf.xlsx"):
     """Reads the setting xlsx and highlights the PDFs in the current directory.
     Args:
@@ -146,7 +167,7 @@ def main(path_xlsx="highlight_pdf.xlsx"):
         print(f"No keywords in {path_xlsx}")
         input("Press Any Key")
         return 1
-    for pdf in glob.glob("*.pdf"):
+    for pdf in input_files("*.pdf"):
         highlight_pdf(pdf, df.keywords, df.colors)
     return 0
 

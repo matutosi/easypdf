@@ -1,6 +1,8 @@
 import os
-import pandas as pd
 import shutil
+import tempfile
+
+import pandas as pd
 
 import pdfplumber
 
@@ -40,9 +42,14 @@ def pdf_tables2zip_csv(pdf_files, zip_file="tables.zip"):
     
     streamlit用の関数
     """
-    dir = "csv"
-    if not os.path.exists(dir):
-        os.makedirs(dir)
+    with tempfile.TemporaryDirectory() as dir:
+        _write_csv(pdf_files, dir)
+        shutil.make_archive(os.path.splitext(zip_file)[0], format='zip', root_dir=dir)
+    return(zip_file)
+
+
+def _write_csv(pdf_files, dir):
+    """Writes the tables in the PDFs as csv files into dir."""
     for up_file in pdf_files:
         name = up_file if isinstance(up_file, str) else up_file.name
         with pdfplumber.open(up_file) as pdf:
@@ -53,8 +60,6 @@ def pdf_tables2zip_csv(pdf_files, zip_file="tables.zip"):
                 else:
                     for j, tb in enumerate(tbls):
                         pd.DataFrame(tb).to_csv(out_path(name, f'_{i+1}_{j+1}', '.csv', dir), header=False, index=False)
-    shutil.make_archive(os.path.splitext(zip_file)[0], format='zip', root_dir=dir)
-    return(zip_file)
 
 if __name__ == "__main__":
     # path_in = "mtcars.pdf"

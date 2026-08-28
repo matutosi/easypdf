@@ -25,6 +25,7 @@ SHARED = {
     "out_path": list(MODULES),
     "get_digit": ["extract_texts", "extract_images"],
     "read_excel": ["highlight_pdf", "highlight_xlsx"],
+    "input_files": ["highlight_pdf", "highlight_xlsx"],
 }
 
 
@@ -60,3 +61,21 @@ class TestOutPath:
         out_path = MODULES["extract_texts"].out_path
         assert out_path("d/a.pdf", "_1", ".txt", "pages") == "pages" + chr(92) + "a_1.txt" \
             or out_path("d/a.pdf", "_1", ".txt", "pages") == "pages/a_1.txt"
+
+
+class TestInputFiles:
+    def test_skips_the_previous_outputs(self, tmp_path, monkeypatch):
+        """前に作った _highlighted は入力として拾わない."""
+        input_files = MODULES["highlight_pdf"].input_files
+        for name in ["01.pdf", "01_highlighted.pdf", "02.pdf"]:
+            (tmp_path / name).write_text("")
+        monkeypatch.chdir(tmp_path)
+        assert input_files("*.pdf") == ["01.pdf", "02.pdf"]
+
+    def test_skips_the_setting_file(self, tmp_path, monkeypatch):
+        """設定ファイル自身は入力として拾わない."""
+        input_files = MODULES["highlight_xlsx"].input_files
+        for name in ["data.xlsx", "highlight_xlsx.xlsx"]:
+            (tmp_path / name).write_text("")
+        monkeypatch.chdir(tmp_path)
+        assert input_files("*.xlsx", "highlight_xlsx.xlsx") == ["data.xlsx"]

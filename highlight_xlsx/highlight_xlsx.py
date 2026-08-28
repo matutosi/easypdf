@@ -6,6 +6,9 @@ import openpyxl # Need to read xlsx
 from openpyxl.formatting.rule import FormulaRule
 from openpyxl.styles import PatternFill
 
+SUFFIX = "_highlighted"  # 出力に付ける印 (入力として拾わないために使う)
+
+
 def out_path(path, suffix="", ext=None, out_dir=None):
     """Makes an output path from an input path.
     Args:
@@ -83,7 +86,7 @@ def read_excel(path):
 
 
 def highlight_xlsx(path_xlsx, keywords, colors, opacity = 0.3):
-    out_xlsx = out_path(path_xlsx, "_highlighted")
+    out_xlsx = out_path(path_xlsx, SUFFIX)
     wb = openpyxl.load_workbook(path_xlsx)
     sheets = wb.worksheets
     offset = 64 # need to convert number to character
@@ -102,6 +105,24 @@ def highlight_cell(sheet, range_str, keyword, color):
     rule = FormulaRule(formula=[condition], fill=color_fill)
     sheet.conditional_formatting.add(range_str, rule)
 
+def input_files(pattern, path_setting=None):
+    """Lists the input files, without the outputs of the previous runs.
+    Args:
+        pattern (str): The glob pattern (e.g. "*.pdf").
+        path_setting (str, optional): The setting file to be excluded.
+    Returns:
+        list: The paths to be processed.
+    """
+    files = []
+    for path in sorted(glob.glob(pattern)):
+        if SUFFIX in os.path.splitext(os.path.basename(path))[0]:
+            continue
+        if path_setting is not None and os.path.abspath(path) == os.path.abspath(path_setting):
+            continue
+        files.append(path)
+    return files
+
+
 def main(path_xlsx="highlight_xlsx.xlsx"):
     """Reads the setting xlsx and highlights the xlsx files in the current directory.
     Args:
@@ -117,7 +138,7 @@ def main(path_xlsx="highlight_xlsx.xlsx"):
         print(f"No keywords in {path_xlsx}")
         input("Press Any Key")
         return 1
-    for xlsx in glob.glob("*.xlsx"):
+    for xlsx in input_files("*.xlsx", path_xlsx):
         out_xlsx = highlight_xlsx(xlsx, df.keywords, df.colors)
         os.startfile(out_xlsx)
     return 0

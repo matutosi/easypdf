@@ -69,23 +69,25 @@ class TestPdfTables2ZipCsv:
             names = z.namelist()
         assert all(n.startswith("mtcars_") for n in names)
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="csv ディレクトリを消さずに使い回すため，前回の結果が zip に残る",
-    )
     def test_zip_has_no_leftover(self, tmp_path, pdf_mtcars, monkeypatch):
-        """2回目の実行に，前回の結果が混ざらない."""
+        """作業用のディレクトリが残っていても，zip に混ざらない."""
         shutil.copy(pdf_mtcars, tmp_path / "mtcars.pdf")
         monkeypatch.chdir(tmp_path)
-        et.pdf_tables2zip_csv(["mtcars.pdf"])
-        os.rename("csv", "csv_first")
         os.makedirs("csv")
-        for name in os.listdir("csv_first"):
-            os.rename(os.path.join("csv_first", name), os.path.join("csv", "old_" + name))
+        with open(os.path.join("csv", "old_x.csv"), "w") as con:
+            con.write("a")
         zip_file = et.pdf_tables2zip_csv(["mtcars.pdf"])
         with zipfile.ZipFile(zip_file) as z:
             names = z.namelist()
+        assert names
         assert not any(n.startswith("old_") for n in names)
+
+    def test_leaves_no_working_directory(self, tmp_path, pdf_mtcars, monkeypatch):
+        """作業用のディレクトリを残さない."""
+        shutil.copy(pdf_mtcars, tmp_path / "mtcars.pdf")
+        monkeypatch.chdir(tmp_path)
+        et.pdf_tables2zip_csv(["mtcars.pdf"])
+        assert not os.path.exists("csv")
 
 
 class TestExtractImages:
