@@ -23,16 +23,11 @@ def set_font(c, font_name=None, font_size=None):
         c.setFontSize(font_size)
 
 
-def create_session_number(c, x, y, text, font_name=None, font_size=None):
-    set_font(c, font_name, font_size)
-    c.drawString(x * mm, y * mm, text)
-
 def create_session_numbers(path_pdf, pagesize=A4, start=1, end=1, pre="A", post="", x=20, y=20, font_name=None, font_size=30):
     c = canvas.Canvas(path_pdf, pagesize=pagesize)
     y = (pagesize[1] / mm) - y
     for i in range(start, end + 1):
         text = f'{pre}{i:02}{post}'
-        # 描画は create_number_page (中央そろえ)．create_session_number は今は使っていない
         create_number_page(c, x, y, text, font_name, font_size)
         c.showPage()
     c.save()

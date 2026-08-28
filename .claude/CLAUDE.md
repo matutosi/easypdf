@@ -96,8 +96,8 @@ Streamlit の web 版 (`*_web.py`) もある．
 `extract_tables` の `__main__` が未定義変数で落ちる / 文字の無いページで `write(None)` /
 `next` が `continue` の書き間違い / `R/table.R` が動かない．
 
-**`overlay_pdf.py` の `create_session_number` は今は呼ばれていない** (講演番号も
-`create_number_page` で中央そろえに描いている)．左そろえにしたいなら差し替える．
+**`overlay_pdf.py` の `create_session_number` は 2026-08-28 に消した** (どこからも
+呼ばれていなかった)．講演番号もページ番号と同じ `create_number_page` (中央そろえ) で描く．
 
 ## リファクタリング (2026-08-27 に案を出し，2026-08-28 に 1・3・4・5・6 を実施)
 
@@ -141,11 +141,6 @@ python tests/compare_all.py     # まとめて突き合わせる
 **急ぎのものは無い** (2026-08-28 時点)．バグは全部直し，テストは 81 passed で xfail は 0 件．
 リファクタリングの案6つもすべて入れた．
 
-- **【要判断】`highlight_xlsx` の exe を作るか**．`.ico` と `.xlsx` はあるが exe は無く，
-  README の対応表でも「-」のまま．配布に加えるかはユーザが決める．
-- **【要判断】`overlay_pdf.py` の `create_session_number` をどうするか**．
-  いまはどこからも呼ばれておらず，講演番号も `create_number_page` (中央そろえ) で描いている．
-  左そろえにしたい意図があったなら差し替える．要らないなら消す．
 - テストの無いところ: `extract_x_web.py`・`combine_pdf_web.py`・`highlight_pdf_web.py`
   (Streamlit なので手で動かすしかない)，`R/utils.R` の文字抽出まわり (`WordExtractor`)．
 - `R/` は表抽出しか移植していない．文字抽出 (`extract_words`) は突き合わせていない．

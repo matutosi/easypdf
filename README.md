@@ -22,7 +22,7 @@ Web versions (`*_web.py`) with Streamlit are also available.
 | ---------------------------------- | -------------- | ----------------------------------------------------- | ------------------ | -------------------- | ---------------------- |
 | 結合 / Combine                     | `combine_pdf/` | `combine_pdf.py` (pypdf), `combine_pdf2.py` (PyMuPDF)  | `combine_pdf.exe`  | `combine_pdf.xlsx`   | `combine_pdf_web.py`   |
 | 強調表示 (PDF) / Highlight PDF     | `highlight_pdf/` | `highlight_pdf.py`                                  | `highlight_pdf.exe` | `highlight_pdf.xlsx` | `highlight_pdf_web.py` |
-| 強調表示 (Excel) / Highlight xlsx  | `highlight_xlsx/` | `highlight_xlsx.py`                                 | -                  | `highlight_xlsx.xlsx` | -                     |
+| 強調表示 (Excel) / Highlight xlsx  | `highlight_xlsx/` | `highlight_xlsx.py`                                 | `highlight_xlsx.exe` | `highlight_xlsx.xlsx` | -                   |
 | 重ね合わせ / Overlay               | `overlay_pdf/` | `overlay_pdf.py`                                       | -                  | -                    | -                      |
 | 抽出 / Extract                     | `extract_x/`   | `extract_images.py`, `extract_tables.py`, `extract_texts.py` | -            | -                    | `extract_x_web.py` (表のみ / tables only) |
 | 表抽出の R 移植 (試作) / R port    | `R/`           | `table.R`, `utils.R`                                   | -                  | -                    | -                      |
