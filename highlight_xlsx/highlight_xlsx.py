@@ -9,6 +9,42 @@ from openpyxl.styles import PatternFill
 SUFFIX = "_highlighted"  # 出力に付ける印 (入力として拾わないために使う)
 
 
+COLORS = {
+    "white" : 'FFFFFF',
+    "purple": 'FF00FF',
+    "yellow": 'FFFF00',
+    "red"   : 'FF0000',
+    "sky"   : '00FFFF',
+    "blue"  : '0000FF',
+    "green" : '00FF00',
+    "gray"  : 'CCCCCC',
+}
+DEFAULT_COLOR = 'FFFF00'  # 知らない色名はこれ (黄)
+
+
+def convert_color_hex(color):
+    """
+    Converts a color name into a 6 digit hex string.
+    Args:
+        color (str): The name of the color (e.g. "red"), or "#RRGGBB".
+    Returns:
+        str: The 6 digit hex string (e.g. 'FF0000').
+    Example:
+        >>> convert_color_hex("red")
+        'FF0000'
+        >>> convert_color_hex("#ff0000")
+        'FF0000'
+        >>> convert_color_hex("unknown")
+        'FFFF00'
+    """
+    if isinstance(color, str) and color.startswith("#"):
+        return color[1:].upper()
+    try:
+        return COLORS[color]
+    except (KeyError, TypeError):
+        return DEFAULT_COLOR
+
+
 def out_path(path, suffix="", ext=None, out_dir=None):
     """Makes an output path from an input path.
     Args:
@@ -34,32 +70,18 @@ def out_path(path, suffix="", ext=None, out_dir=None):
 
 def convert_color_name(color):
     """
-    Converts a color name to its RGB value.
+    Converts a color name to the color code of openpyxl.
     Args:
-        color (str): The name of the color.
+        color (str): The name of the color (e.g. "red"), or "#RRGGBB".
     Returns:
-        tuple: The Color code (e.g., 'FF0000' for red).
+        str: The color code (e.g., 'FF0000' for red).
     Example:
         >>> convert_color_name("red")
         'FF0000'
         >>> convert_color_name("unknown")
         'FFFF00'  # default to yellow
     """
-    COLORS = {
-        "white" : 'FFFFFF',
-        "purple": 'FF00FF',
-        "yellow": 'FFFF00',
-        "red"   : 'FF0000',
-        "sky"   : '00FFFF',
-        "blue"  : '0000FF',
-        "green" : '00FF00',
-        "gray"  : 'cccccc' 
-    }
-    try:
-        col = COLORS[color]
-    except:
-        col = 'FFFF00'
-    return col
+    return convert_color_hex(color)
 
 
 def read_excel(path):

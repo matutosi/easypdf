@@ -36,10 +36,11 @@ class TestConvertColorName:
         assert hp.convert_color_name("#FF0000") == (1.0, 0.0, 0.0)
         assert hp.convert_color_name("#000000") == (0.0, 0.0, 0.0)
 
-    @pytest.mark.xfail(strict=True, reason="gray が黒 (0,0,0) に割り当てられている")
-    def test_gray_is_not_black(self):
-        """README には灰と書いてあるが，実際は黒になっている."""
-        assert hp.convert_color_name("gray") != (0, 0, 0)
+    def test_gray_is_gray(self):
+        """gray は灰色 (白でも黒でもない)."""
+        col = hp.convert_color_name("gray")
+        assert col[0] == col[1] == col[2]
+        assert 0 < col[0] < 1
 
 
 class TestHighlightPdf:

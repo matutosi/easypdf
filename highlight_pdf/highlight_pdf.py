@@ -4,9 +4,44 @@ import glob
 import pandas as pd
 import openpyxl # Need to read xlsx
 import fitz     # PyMuPDF
-from PIL import ImageColor
 
 SUFFIX = "_highlighted"  # 出力に付ける印 (入力として拾わないために使う)
+
+
+COLORS = {
+    "white" : 'FFFFFF',
+    "purple": 'FF00FF',
+    "yellow": 'FFFF00',
+    "red"   : 'FF0000',
+    "sky"   : '00FFFF',
+    "blue"  : '0000FF',
+    "green" : '00FF00',
+    "gray"  : 'CCCCCC',
+}
+DEFAULT_COLOR = 'FFFF00'  # 知らない色名はこれ (黄)
+
+
+def convert_color_hex(color):
+    """
+    Converts a color name into a 6 digit hex string.
+    Args:
+        color (str): The name of the color (e.g. "red"), or "#RRGGBB".
+    Returns:
+        str: The 6 digit hex string (e.g. 'FF0000').
+    Example:
+        >>> convert_color_hex("red")
+        'FF0000'
+        >>> convert_color_hex("#ff0000")
+        'FF0000'
+        >>> convert_color_hex("unknown")
+        'FFFF00'
+    """
+    if isinstance(color, str) and color.startswith("#"):
+        return color[1:].upper()
+    try:
+        return COLORS[color]
+    except (KeyError, TypeError):
+        return DEFAULT_COLOR
 
 
 def out_path(path, suffix="", ext=None, out_dir=None):
@@ -85,32 +120,18 @@ def convert_color_name(color):
     """
     Converts a color name to its RGB value.
     Args:
-        color (str): The name of the color.
+        color (str): The name of the color (e.g. "red"), or "#RRGGBB".
     Returns:
-        tuple: The RGB value (e.g., (1, 0, 0) for red).
+        tuple: The RGB value in 0-1 (e.g., (1.0, 0.0, 0.0) for red).
     Example:
         >>> convert_color_name("red")
-        (1, 0, 0)
+        (1.0, 0.0, 0.0)
         >>> convert_color_name("unknown")
-        (1, 1, 0)  # default to yellow
+        (1.0, 1.0, 0.0)  # default to yellow
     """
-    COLORS = {
-        "white" : (1, 1, 1),
-        "purple": (1, 0, 1),
-        "yellow": (1, 1, 0),
-        "red"   : (1, 0, 0),
-        "sky"   : (0, 1, 1),
-        "blue"  : (0, 0, 1),
-        "green" : (0, 1, 0),
-        "gray"  : (0, 0, 0)
-    }
-    if color[0] == "#":
-        rgb_color = ImageColor.getcolor(color, "RGB")
-        return tuple(c / 255.0 for c in rgb_color)
-    try:
-        return COLORS[color]
-    except:
-        return (1, 1, 0)
+    col = convert_color_hex(color)
+    return tuple(int(col[i:i + 2], 16) / 255.0 for i in (0, 2, 4))
+
 
 def read_excel(path):
     """

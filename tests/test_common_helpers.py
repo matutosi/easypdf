@@ -18,14 +18,19 @@ MODULES = {
     "extract_tables": load("extract_x/extract_tables.py"),
     "extract_texts": load("extract_x/extract_texts.py"),
     "extract_images": load("extract_x/extract_images.py"),
+    "combine_pdf": load("combine_pdf/combine_pdf.py"),
+    "combine_pdf2": load("combine_pdf/combine_pdf2.py"),
 }
 
 # 関数名 -> それを持つべき module 名
 SHARED = {
-    "out_path": list(MODULES),
+    "out_path": ["highlight_pdf", "highlight_xlsx", "extract_tables",
+                 "extract_texts", "extract_images"],
+    "extract_file_names": ["combine_pdf", "combine_pdf2"],
     "get_digit": ["extract_texts", "extract_images"],
     "read_excel": ["highlight_pdf", "highlight_xlsx"],
     "input_files": ["highlight_pdf", "highlight_xlsx"],
+    "convert_color_hex": ["highlight_pdf", "highlight_xlsx"],
 }
 
 
@@ -40,6 +45,12 @@ def test_shared_function_is_identical(name, owners):
     first = sources[owners[0]]
     for owner, src in sources.items():
         assert src == first, f"{owner} の {name} が {owners[0]} とずれている"
+
+
+def test_color_table_is_identical():
+    """色の表は，どのファイルでも同じにする."""
+    tables = {o: MODULES[o].COLORS for o in ["highlight_pdf", "highlight_xlsx"]}
+    assert tables["highlight_pdf"] == tables["highlight_xlsx"]
 
 
 class TestOutPath:

@@ -29,8 +29,8 @@ Streamlit の web 版 (`*_web.py`) もある．
 - 2026-08-28 11:45
   **リファクタリングを 1 → 3 → 5 → 4 → 6 の順に入れた** (共通コードの置き方は案 B)．
   main のガード，出力名の `out_path()`，例外を握り潰さない，入力と出力の分離，
-  **R の未定義6関数の移植**．テストは 68 passed / 4 xfailed，
-  **R と Python の突き合わせは PDF 13個すべてで 5/5 一致**．
+  **R の未定義6関数の移植**，色の表の共通化 (PDF 側の `gray` が黒だったのも直った)．
+  テストは 72 passed / 3 xfailed，**突き合わせは PDF 13個すべてで 5/5 一致**．
 
 - 2026-08-28 11:15
   **README に6機能の対応表を入れ，`.gitignore` の `__pycache__` 漏れを直した**
@@ -43,14 +43,13 @@ Streamlit の web 版 (`*_web.py`) もある．
   実装の最終更新は 2025-11-11 で，pdfplumber の R 移植版 (`R/table.R`) の
   README 追加と，表抽出まわりの関数整理までが入っている．
 
-## 残っているバグ (2026-08-28 時点)
+## 残っているバグ (2026-08-28 時点．3件)
 
 すべて `tests/` に `xfail` (strict) で固定してある．**直すと `XPASS` になって失敗する**ので，
 直したらその印を消す．走らせ方は [tests/README.md](../tests/README.md)．
 
 | 場所 | 中身 |
 |---|---|
-| `highlight_pdf.py` | `gray` が黒 (0,0,0) になっている (README は「灰」) |
 | `highlight_xlsx.py` | 範囲を `chr(max_col + 64)` で作るので，27列以上で列名が壊れる |
 | `extract_images.py` | 画像の無い PDF で `max(pages)` が落ちる |
 | `overlay_pdf.py` | `font_name` を渡さないと `font_size` が効かない |
@@ -70,12 +69,13 @@ NameError / `path.replace(".pdf", ...)` で出力名が壊れる / `extract_tabl
 **共通コードは1か所へまとめず，各ディレクトリに同じ中身を置く (案 B．ユーザ確定)**．
 写した先がずれると直したつもりで直っていない箇所ができるので，
 `tests/test_common_helpers.py` が中身の一致を機械的に見ている
-(`out_path`・`input_files`・`read_excel`・`get_digit`)．
+(`out_path`・`input_files`・`read_excel`・`get_digit`・`extract_file_names`・
+`convert_color_hex`・色の表 `COLORS`)．
 
 | | 中身 | 状態 |
 |---|---|---|
 | 1 | main を `if __name__ == "__main__":` で囲う | 済 |
-| 2 | 共通処理を1か所へ | **未着手** (案 B なので，写した中身をそろえるところまでは済) |
+| 2 | 共通処理を1か所へ (案 B: 各ディレクトリに同じ中身) | 済 |
 | 3 | 出力名の作り方を `out_path()` にそろえる | 済 |
 | 4 | 入力と出力を混ぜない (`input_files()`，作業用は tempdir) | 済 |
 | 5 | 例外を握り潰さない．設定の空行を読み飛ばす | 済 |
@@ -103,10 +103,7 @@ python tests/compare_all.py     # まとめて突き合わせる
 
 ### 次にやること
 
-- **リファクタリングの案 6つのうち，1・3・4・5・6 は 2026-08-28 に入れた**．
-  残るは **2 (共通処理を1か所へ)**．方針は **B (各ディレクトリに同じ中身を置く)** で確定
-  (2026-08-27 の案 A/B/C から選択)．`out_path`・`input_files`・`read_excel`・`get_digit` は
-  すでに写してあり，ずれていないことを `tests/test_common_helpers.py` が見ている．
-- **残っているバグ4件** (テストの xfail)．`gray` が黒 / 27列以上で範囲が壊れる /
+- **リファクタリングの案 6つは 2026-08-28 にすべて入れた** (1 → 3 → 5 → 4 → 6 → 2)．
+- **残っているバグ3件** (テストの xfail)．27列以上で範囲が壊れる /
   画像の無い PDF で `max(pages)` が落ちる / `font_name` 無しで `font_size` が効かない．
 - `extract_tables.py` の `__main__` が `path_in`/`path_out` 未定義で落ちる (テスト未作成)．
