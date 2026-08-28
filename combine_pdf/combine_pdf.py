@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 import openpyxl # Need to read xlsx
 from pypdf import PdfWriter
@@ -58,20 +59,31 @@ def combine_pdf(input_pdfs, output_pdf):
         print(f"An error occurred while writing the combined PDF: {e}")
         return None
 
-# main
-try:
-    df = pd.read_excel("combine_pdf.xlsx")
-except FileNotFoundError as e:
-    print(f"File Not Found Error: {e}")
-    input("Press Any Key")
-except Exception as e:
-    print(f"Error: {e}")
-    input("Press Any Key")
+def main(path_xlsx="combine_pdf.xlsx"):
+    """Reads the setting xlsx and combines PDFs as it says.
+    Args:
+        path_xlsx: The path to the setting xlsx file.
+    Returns:
+        0 on success, 1 if the setting file cannot be read.
+    """
+    try:
+        df = pd.read_excel(path_xlsx)
+    except FileNotFoundError as e:
+        print(f"File Not Found Error: {e}")
+        input("Press Any Key")
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        input("Press Any Key")
+        return 1
 
-files = extract_file_names(df) 
+    for output_pdf, input_pdfs in extract_file_names(df):
+        print("combining")
+        print(input_pdfs)
+        print("    generating: " + output_pdf)
+        combine_pdf(input_pdfs, output_pdf)
+    return 0
 
-for f in files:
-    print("combining")
-    print(f[1])
-    print("    generating: " + f[0])
-    combine_pdf(f[1], f[0])
+
+if __name__ == "__main__":
+    sys.exit(main())
