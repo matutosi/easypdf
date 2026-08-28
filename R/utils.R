@@ -342,9 +342,14 @@ WordExtractor <- function(
           yt_calc <- obj$y_tolerance_ratio * current_word[[length(current_word)]]$size
         }
         
-        if (!obj$keep_blank_chars && grepl("^\\s+$", text)) { # text.isspace()
+        # Python の text.isspace() に相当する．
+        # TRE の \\s は U+00A0 (改行しない空白) などを空白と見なさないので，
+        # PCRE に (*UCP) を付けて Unicode の空白として判定する
+        if (!obj$keep_blank_chars && grepl("(*UCP)^\\s+$", text, perl = TRUE)) {
           start_next_word(NULL)
-        } else if (grepl(paste0("[", obj$split_at_punctuation, "]"), text)) {
+        } else if (nzchar(obj$split_at_punctuation) &&
+                   grepl(text, obj$split_at_punctuation, fixed = TRUE)) {
+          # split_at_punctuation が空なら区切らない ("[]" は正規表現として不正)
           start_next_word(char)
           start_next_word(NULL)
         } else if (length(current_word) > 0 && obj$char_begins_new_word(
@@ -400,7 +405,11 @@ WordExtractor <- function(
       
       # RのsplitとlapplyでPythonのitertools.groupbyを模倣
       # 1. grouping_keysに基づいて文字をグループ化
-      group_factors <- apply(sapply(chars, function(c) sapply(grouping_keys, function(k) c[[k]])), 2, paste, collapse = "__")
+      # sapply は grouping_keys が1つだと行列にならないので，文字ごとに組み立てる
+      group_factors <- vapply(chars, function(c) {
+        paste(vapply(grouping_keys, function(k) as.character(c[[k]]), character(1)),
+              collapse = "__")
+      }, character(1))
       grouped_chars <- split(chars, group_factors)
       
       for (group_name in names(grouped_chars)) {

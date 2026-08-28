@@ -129,8 +129,16 @@ Streamlit の web 版 (`*_web.py`) もある．
 - `orientation` が空のエッジ (曲線由来) で落ちていた → Python と同じ扱いにした．
 - 表の無い PDF で落ちていた → 空を返すようにした．
 
-**手元の PDF 13個すべてで，5段階とも pdfplumber と一致する**
-(`edges` → `intersections` → `cells` → `tables` → `TableFinder`)．
+**2026-08-28 に文字抽出 (`extract_words`) も突き合わせ，そこでも2つ直した**．
+
+- `iter_extract_tuples` が `sapply` の結果を行列と決めつけていた
+  (`extra_attrs` が無いと `upright` だけになり，行列にならず落ちる)．
+- 空白の判定が `grepl("^\s+$", text)` で，**U+00A0 (改行しない空白) を空白と見なさず**，
+  語がつながっていた → PCRE に `(*UCP)` を付けた．
+  `split_at_punctuation` が空のときに `"[]"` という不正な正規表現を作る件も直した．
+
+**手元の PDF 13個すべてで，6段階とも pdfplumber と一致する**
+(`edges` → `intersections` → `cells` → `tables` → `TableFinder` → `words`)．
 
 ```
 python tests/compare_all.py     # まとめて突き合わせる
@@ -141,6 +149,7 @@ python tests/compare_all.py     # まとめて突き合わせる
 **急ぎのものは無い** (2026-08-28 時点)．バグは全部直し，テストは 81 passed で xfail は 0 件．
 リファクタリングの案6つもすべて入れた．
 
-- テストの無いところ: `extract_x_web.py`・`combine_pdf_web.py`・`highlight_pdf_web.py`
-  (Streamlit なので手で動かすしかない)，`R/utils.R` の文字抽出まわり (`WordExtractor`)．
-- `R/` は表抽出しか移植していない．文字抽出 (`extract_words`) は突き合わせていない．
+- **`combine_pdf_web.py` は `opencv-python` が要る** (サムネイルの作成に使っている)．
+  入っていない環境ではテストが skip される．requirements.txt も無い．
+  `st.image` に置き換えれば依存を減らせる (未着手)．
+- `R/` に移植したのは表抽出と文字抽出まで．`extract_text(layout = TRUE)` は突き合わせていない．

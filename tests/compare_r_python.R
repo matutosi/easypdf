@@ -122,6 +122,21 @@ if (inherits(r_finder, "try-error")) {
                  length(py$tables), paste(p_cells, collapse = "/")))
 }
 
+# 6. extract_words (入力は Python の chars)
+chars <- lapply(py$chars, function(c) c[!sapply(c, is.null)])
+r_words <- try(extract_words(chars), silent = TRUE)
+if (inherits(r_words, "try-error")) {
+  record("words", FALSE,
+         sub("\n.*", "", conditionMessage(attr(r_words, "condition"))))
+} else {
+  key_word <- function(w) paste(w$text, key_bbox(obj_to_bbox(w)), sep = "@")
+  r_w <- keys(r_words, key_word)
+  p_w <- keys(py$words, key_word)
+  record("words", identical(r_w, p_w),
+         sprintf("R %d / Python %d, 共通 %d",
+                 length(r_w), length(p_w), length(intersect(r_w, p_w))))
+}
+
 cat("== まとめ ==\n")
 n_ok <- sum(sapply(results, `[[`, "ok"))
 cat(sprintf("  %d / %d 段階が一致\n", n_ok, length(results)))

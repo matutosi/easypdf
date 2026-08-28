@@ -23,9 +23,17 @@ python tests/dump_pdfplumber.py      # tests/fixtures/mtcars_page1.json を作�
 Rscript tests/compare_r_python.R     # 段階ごとに比較する
 ```
 
-比べる段階は5つ (`edges` → `intersections` → `cells` → `tables` → `TableFinder`)．
-前の4つは Python の出力を入力に与えるので，**どの段階で食い違うかが分かる**．
-最後の `TableFinder` だけは通しで動かす．
+比べる段階は6つ．
+
+1. `edges` … エッジの整理 (`filter_edges` → `merge_edges` → `filter_edges`)
+2. `intersections` … 交点
+3. `cells` … セル
+4. `tables` … 表への組み立て
+5. `TableFinder` … 1-4 を通しで
+6. `words` … 文字の抽出 (`extract_words`)
+
+**どの段階も Python の出力を入力に与える**ので，食い違う段階がそのまま原因の場所になる
+(`TableFinder` だけは通しで動かす)．
 
 ## 中身
 
@@ -36,6 +44,7 @@ Rscript tests/compare_r_python.R     # 段階ごとに比較する
 | `test_overlay_pdf.py` | ページ番号・講演番号の生成と重ね合わせ |
 | `test_highlight_xlsx.py` | 色名の変換，関数として呼べるか，27列以上の範囲 |
 | `test_common_helpers.py` | 各ディレクトリへ写した共通処理・色の表がずれていないか |
+| `test_web.py` | Streamlit の web 版が立ち上がるか (AppTest) |
 | `test_combine_pdf.py` | 設定の読み込み，結合，main の戻り値 |
 | `dump_pdfplumber.py` | pdfplumber の各段階を JSON へ書き出す |
 | `compare_r_python.R` | 同じ段階を R 移植版で走らせて比べる |

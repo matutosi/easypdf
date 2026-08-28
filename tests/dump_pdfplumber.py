@@ -10,6 +10,8 @@
     intersections … edges_to_intersections の結果 (座標のみ)
     cells         … intersections_to_cells の結果
     tables        … cells_to_tables の結果とセルの文字列
+    chars         … page.chars (文字抽出の入力)
+    words         … page.extract_words() の結果 (文字抽出の答え合わせ用)
 """
 import json
 import sys
@@ -21,6 +23,21 @@ from pdfplumber.table import TableFinder
 def f(x):
     """Decimal や None を JSON にできる形へそろえる."""
     return None if x is None else float(x)
+
+
+# 文字の抽出で使う項目だけを取り出す (R 側が見るもの)
+CHAR_KEYS = ("text", "x0", "x1", "top", "bottom", "doctop", "y0", "y1",
+             "width", "height", "size", "upright", "fontname", "object_type")
+WORD_KEYS = ("text", "x0", "x1", "top", "bottom", "doctop", "upright")
+
+
+def pick(obj, keys):
+    """必要な項目だけを JSON にできる形で取り出す."""
+    out = {}
+    for k in keys:
+        v = obj.get(k)
+        out[k] = float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+    return out
 
 
 def edge_to_dict(e):
@@ -50,6 +67,8 @@ def dump(path_pdf, page_no, path_out):
                 [f(x), f(y)] for (x, y) in finder.intersections.keys()
             ),
             "cells": [[f(v) for v in c] for c in finder.cells],
+            "chars": [pick(c, CHAR_KEYS) for c in page.chars],
+            "words": [pick(w, WORD_KEYS) for w in page.extract_words()],
             "tables": [
                 {
                     "bbox": [f(v) for v in t.bbox],
@@ -69,6 +88,8 @@ def dump(path_pdf, page_no, path_out):
     print(f"  intersections : {len(data['intersections'])}")
     print(f"  cells         : {len(data['cells'])}")
     print(f"  tables        : {len(data['tables'])}")
+    print(f"  chars         : {len(data['chars'])}")
+    print(f"  words         : {len(data['words'])}")
 
 
 if __name__ == "__main__":
